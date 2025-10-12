@@ -145,7 +145,10 @@ function getRandomWord() {
   return nLetterWords[randomInteger(0, nLetterWords.length)];
 }
 
-/** Main Function */
+/**
+ * Main function that initializes and runs the Wordle game.
+ * Sets up the game window, graphics, and event listeners.
+ */
 function Wordle() {
   // initialize the game
   let game = initializeGame();
@@ -296,6 +299,10 @@ function Wordle() {
   gw.addEventListener("click", resetGameAction);
 }
 
+/**
+ * Initializes a new game with default state.
+ * Returns a game object with playing status and empty progress.
+ */
 function initializeGame() {
   let game = {
     status: GAME_STATUS.PLAYING,
@@ -309,6 +316,10 @@ function initializeGame() {
   return game;
 }
 
+/**
+ * Initializes the game view with grid, alert, and keyboard.
+ * Returns a view object containing all UI components.
+ */
 function initializeView(game) {
   let gameView = {
     grid: [],
@@ -329,7 +340,10 @@ function initializeView(game) {
   return gameView;
 }
 
-// Draw Empty Grid
+/**
+ * Draws an empty grid of guess squares.
+ * Returns a compound object containing all empty rows.
+ */
 function drawEmptyGrid() {
   let gridCompound = GCompound();
   for (let i = 0; i < NUM_GUESSES; i++) {
@@ -343,7 +357,10 @@ function drawEmptyGrid() {
   return gridCompound;
 }
 
-// Create Row Model
+/**
+ * Creates a row model with letters and color codes.
+ * Returns an array of [letter, color] pairs for display.
+ */
 function createRow(guess, secret) {
   let row = [];
   let colorCodes = [];
@@ -363,6 +380,10 @@ function createRow(guess, secret) {
   return row;
 }
 
+/**
+ * Draws a single row of guess squares.
+ * Returns a compound object with positioned squares.
+ */
 function drawRow(row, currentRow, gw) {
   let rowCompound = GCompound();
   for (let i = 0; i < row.length; i++) {
@@ -379,7 +400,10 @@ function drawRow(row, currentRow, gw) {
   return rowCompound;
 }
 
-// Draw Square
+/**
+ * Draws a single guess square with letter and color.
+ * Returns a compound object with background and text.
+ */
 function drawGuessSquare(letter, color) {
   let square = GCompound();
   let squareBox = GRect(0, 0, GUESS_SQUARE_SIZE, GUESS_SQUARE_SIZE);
@@ -410,7 +434,10 @@ function drawGuessSquare(letter, color) {
   return square;
 }
 
-//Alert
+/**
+ * Draws an alert message with appropriate color.
+ * Returns a centered label based on game status.
+ */
 function drawAlert(text, gameStatus) {
   let alert = GLabel(text, ALERT_X, ALERT_Y);
   alert.setTextAlign("center");
@@ -424,7 +451,10 @@ function drawAlert(text, gameStatus) {
   return alert;
 }
 
-// Keyboard color update
+/**
+ * Updates keyboard key colors based on game state.
+ * Modifies keyboard appearance for found, correct, and wrong letters.
+ */
 function updateKeyColor(keyboard, game) {
   for (let i = 0; i < game.foundLetters.length; i++) {
     let letter = game.foundLetters.substring(i, i + 1);
@@ -440,12 +470,9 @@ function updateKeyColor(keyboard, game) {
   }
 }
 
-/* Helper: checkGuessWithSecret(guess, secret)
- * Checks a guess against a secret string, returning an array indicating matches.
- * For each position i in the guess:
- * - 1 if the character matches the secret at position i (exact match).
- * - 0 if the character is in the secret but not at position i (present elsewhere).
- * - -1 if the character is not in the secret.
+/**
+ * Checks a guess against the secret word.
+ * Returns array with 1 for exact match, 0 for wrong position, -1 for not found.
  */
 function checkGuessWithSecret(guess, secret) {
   let match = [];
@@ -464,6 +491,10 @@ function checkGuessWithSecret(guess, secret) {
   return match;
 }
 
+/**
+ * Saves guess results to game state.
+ * Updates found, correct, and wrong letter tracking.
+ */
 function saveGuessToGame(row, game) {
   for (let i = 0; i < row.length; i++) {
     let letter = row[i][0];
