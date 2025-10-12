@@ -60,7 +60,7 @@ const TEXT_LOSS_COLOR = "#B05050";
 
 // Fonts
 const GUESS_FONT = "700 36px HelveticaNeue";
-const ALERT_FONT = "700 20px HelveticaNeue";
+const ALERT_FONT = "700 13px HelveticaNeue";
 
 // Game states
 const GAME_STATUS = {
@@ -68,10 +68,6 @@ const GAME_STATUS = {
   WON: "WON",
   LOST: "LOST",
 };
-
-// LEFT and RIGHT margin for the Grid
-const GRID_MARGIN =
-  (GWINDOW_WIDTH - NUM_LETTERS * (GUESS_SQUARE_SIZE + GUESS_MARGIN)) / 2;
 
 // EMPTY ROW
 const EMPTY_ROW = Array.from({ length: NUM_LETTERS }, () => ["", 2]);
@@ -349,8 +345,8 @@ function drawEmptyGrid() {
   for (let i = 0; i < NUM_GUESSES; i++) {
     let rowView = drawRow(EMPTY_ROW, i);
     rowView.setLocation(
-      GRID_MARGIN,
-      GUESS_MARGIN + (GUESS_SQUARE_SIZE + GUESS_MARGIN) * i,
+      GUESS_MARGIN,
+      GUESS_MARGIN + (GUESS_SQUARE_SIZE + GUESS_MARGIN * 2) * i,
     );
     gridCompound.add(rowView);
   }
@@ -388,13 +384,13 @@ function drawRow(row, currentRow, gw) {
   let rowCompound = GCompound();
   for (let i = 0; i < row.length; i++) {
     let square = drawGuessSquare(row[i][0], row[i][1]);
-    rowCompound.add(square, (GUESS_SQUARE_SIZE + GUESS_MARGIN) * i, 0);
+    rowCompound.add(square, (GUESS_SQUARE_SIZE + GUESS_MARGIN * 2) * i, 0);
   }
   if (gw !== undefined) {
     gw.add(
       rowCompound,
-      GRID_MARGIN,
-      GUESS_MARGIN + (GUESS_SQUARE_SIZE + GUESS_MARGIN) * currentRow,
+      GUESS_MARGIN,
+      GUESS_MARGIN + (GUESS_SQUARE_SIZE + GUESS_MARGIN * 2) * currentRow,
     );
   }
   return rowCompound;
@@ -441,6 +437,7 @@ function drawGuessSquare(letter, color) {
 function drawAlert(text, gameStatus) {
   let alert = GLabel(text, ALERT_X, ALERT_Y);
   alert.setTextAlign("center");
+  alert.setFont(ALERT_FONT);
   if (gameStatus === GAME_STATUS.WON) {
     alert.setColor(TEXT_WIN_COLOR);
   } else if (gameStatus === GAME_STATUS.LOST) {
