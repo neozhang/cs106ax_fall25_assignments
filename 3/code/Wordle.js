@@ -152,7 +152,7 @@ function Wordle() {
   // initialize graphics
   let gw = GWindow(GWINDOW_WIDTH, GWINDOW_HEIGHT);
   let gameView = initializeView(game);
-  gw.add(drawEmptyGrid());
+  gw.add(gameView.grid);
   gw.add(gameView.alert);
   gw.add(gameView.keyboard);
 
@@ -171,17 +171,7 @@ function Wordle() {
       game.guessInProgress += e;
       // render the current row
       let row = createRow(game.guessInProgress);
-      let rowView = drawRow(row, gameView.currentRow, gw);
-      if (gameView.currentColumn === 0) {
-        // this is a new row
-        gameView.grid.push(rowView);
-      } else {
-        // update the grid
-        gameView.grid[gameView.currentRow] = rowView;
-        // remove the existing Row from GW
-        gw.remove(gameView.grid[gameView.currentRow]);
-      }
-      drawRow(row, gameView.currentRow, gw);
+      let rowView = drawRow(row, gameView.currentRow, gameView.grid);
       gameView.currentColumn += 1;
     }
   }
@@ -209,9 +199,8 @@ function Wordle() {
       gw.add(gameView.alert);
     } else {
       // update the grid
-      gw.remove(gameView.grid[gameView.currentRow]); // remove the current row
       let row = createRow(guess, game.secret); // create the model for the new row
-      let rowView = drawRow(row, gameView.currentRow, gw); // create the view for the new row
+      let rowView = drawRow(row, gameView.currentRow, gameView.grid); // create the view for the new row
       game.guessedRows.push(row); // submit the current row
 
       // check win / lose
@@ -239,7 +228,6 @@ function Wordle() {
       }
       // reset, clean up and move on
       game.guessInProgress = ""; // reset the string
-      gameView.grid.push(rowView); // update the grid view
     }
   }
 
@@ -254,10 +242,7 @@ function Wordle() {
     ); // remove one last character from guessInProgress
     // redraw the current row
     let row = createRow(game.guessInProgress);
-    let rowView = drawRow(row, gameView.currentRow, gw);
-    gameView.grid[gameView.currentRow] = rowView; // update the grid
-    gw.remove(gameView.grid[gameView.currentRow]); // remove the existing Row from GW
-    drawRow(row, gameView.currentRow, gw); // redraw the new row
+    let rowView = drawRow(row, gameView.currentRow, gameView.grid);
     gameView.currentColumn -= 1; // move the cursor back by 1
   }
 
@@ -281,11 +266,13 @@ function Wordle() {
 
   function resetGameAction() {
     if (game.status === GAME_STATUS.WON || game.status === GAME_STATUS.LOST) {
+      gw.remove(gameView.grid);
       gw.remove(gameView.alert);
-
+      resetAllColors(gameView.keyboard); // reset the keyboard colors
       game = initializeGame();
       gameView = initializeView(game);
-      gw.add(drawEmptyGrid());
+      gameView.grid = drawEmptyGrid();
+      gw.add(gameView.grid);
       gw.add(gameView.alert);
     } else {
       return;
@@ -318,7 +305,7 @@ function initializeGame() {
  */
 function initializeView(game) {
   let gameView = {
-    grid: [],
+    grid: drawEmptyGrid(),
     alert: drawAlert(
       "Type or click on the keyboard to start. Good luck!",
       game.status,
@@ -338,17 +325,12 @@ function initializeView(game) {
 
 /**
  * Draws an empty grid of guess squares.
- * Returns a compound object containing all empty rows.
+ * Populates the provided grid compound with empty rows.
  */
 function drawEmptyGrid() {
   let gridCompound = GCompound();
   for (let i = 0; i < NUM_GUESSES; i++) {
-    let rowView = drawRow(EMPTY_ROW, i);
-    rowView.setLocation(
-      GUESS_MARGIN,
-      GUESS_MARGIN + (GUESS_SQUARE_SIZE + GUESS_MARGIN * 2) * i,
-    );
-    gridCompound.add(rowView);
+    let rowView = drawRow(EMPTY_ROW, i, gridCompound);
   }
   return gridCompound;
 }
@@ -380,14 +362,14 @@ function createRow(guess, secret) {
  * Draws a single row of guess squares.
  * Returns a compound object with positioned squares.
  */
-function drawRow(row, currentRow, gw) {
+function drawRow(row, currentRow, gridCompound) {
   let rowCompound = GCompound();
   for (let i = 0; i < row.length; i++) {
     let square = drawGuessSquare(row[i][0], row[i][1]);
     rowCompound.add(square, (GUESS_SQUARE_SIZE + GUESS_MARGIN * 2) * i, 0);
   }
-  if (gw !== undefined) {
-    gw.add(
+  if (gridCompound !== undefined) {
+    gridCompound.add(
       rowCompound,
       GUESS_MARGIN,
       GUESS_MARGIN + (GUESS_SQUARE_SIZE + GUESS_MARGIN * 2) * currentRow,
@@ -507,4 +489,11 @@ function saveGuessToGame(row, game) {
     }
   }
   return game;
+}
+
+function resetAllColors(keyboard) {
+  let keys = "QWERTYUIOPASDFGHJKLZXCVBNM";
+  for (let i = 0; i < keys.length; i++) {
+    keyboard.setKeyColor(keys[i], KEYBOARD_DEFAULT_COLOR);
+  }
 }
