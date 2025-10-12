@@ -1,0 +1,482 @@
+/*
+ * File: Wordle.js
+ * -----------------
+ * This program implements the Wordle game.
+ */
+"use strict";
+/**
+ * GAME RULES CONSTANTS
+ * ---------------------
+ */
+const NUM_LETTERS = 5; // The number of letters in each guess
+const NUM_GUESSES = 6; // The number of guesses the player has to win
+
+/**
+ * SIZING AND POSITIONING CONSTANTS
+ * --------------------------------
+ */
+const SECTION_SEP = 32; // The space between the grid, alert, and keyboard sections
+const GUESS_MARGIN = 8; // The space around each guess square
+const GWINDOW_WIDTH = 400; // The width of the GWindow
+
+// The size of each guess square (computed to fill the entire GWINDOW_WIDTH)
+const GUESS_SQUARE_SIZE =
+  (GWINDOW_WIDTH - GUESS_MARGIN * 2 * NUM_LETTERS) / NUM_LETTERS;
+
+// Height of the guess section in total
+const GUESS_SECTION_HEIGHT =
+  GUESS_SQUARE_SIZE * NUM_GUESSES + GUESS_MARGIN * NUM_GUESSES * 2;
+
+// X and Y position where alerts should be centered
+const ALERT_X = GWINDOW_WIDTH / 2;
+const ALERT_Y = GUESS_SECTION_HEIGHT + SECTION_SEP;
+
+// X and Y position to place the keyboard
+const KEYBOARD_X = 0;
+const KEYBOARD_Y = ALERT_Y + SECTION_SEP;
+
+// GWINDOW_HEIGHT calculated to fit everything perfectly.
+const GWINDOW_HEIGHT = KEYBOARD_Y + GKeyboard.getHeight(GWINDOW_WIDTH);
+
+/**
+ * STYLISTIC CONSTANTS
+ * -------------------
+ */
+const COLORBLIND_MODE = false; // If true, uses R/G colorblind friendly colors
+
+// Background/Border Colors
+const BORDER_COLOR = "#3A3A3C"; // Color for border around guess squares
+const BACKGROUND_DEFAULT_COLOR = "#121213";
+const KEYBOARD_DEFAULT_COLOR = "#818384";
+const BACKGROUND_CORRECT_COLOR = COLORBLIND_MODE ? "#E37E43" : "#618C55";
+const BACKGROUND_FOUND_COLOR = COLORBLIND_MODE ? "#94C1F6" : "#B1A04C";
+const BACKGROUND_WRONG_COLOR = "#3A3A3C";
+
+// Text Colors
+const TEXT_DEFAULT_COLOR = "#FFFFFF";
+const TEXT_ALERT_COLOR = "#B05050";
+const TEXT_WIN_COLOR = COLORBLIND_MODE ? "#94C1F6" : "#618C55";
+const TEXT_LOSS_COLOR = "#B05050";
+
+// Fonts
+const GUESS_FONT = "700 36px HelveticaNeue";
+const ALERT_FONT = "700 20px HelveticaNeue";
+
+// Game states
+const GAME_STATUS = {
+  PLAYING: "PLAYING",
+  WON: "WON",
+  LOST: "LOST",
+};
+
+// LEFT and RIGHT margin for the Grid
+const GRID_MARGIN =
+  (GWINDOW_WIDTH - NUM_LETTERS * (GUESS_SQUARE_SIZE + GUESS_MARGIN)) / 2;
+
+// EMPTY ROW
+const EMPTY_ROW = Array.from({ length: NUM_LETTERS }, () => ["", 2]);
+
+/**
+ * Accepts a KeyboardEvent and returns
+ * the letter that was pressed, or null
+ * if a letter wasn't pressed.
+ */
+function getKeystrokeLetter(e) {
+  if (e.altKey || e.ctrlKey || e.metaKey) return null;
+  const key = e.key.toLowerCase();
+
+  if (!/^[a-z]$/.exec(key)) return null;
+
+  return key;
+}
+
+/**
+ * Accepts a KeyboardEvent and returns true
+ * if that KeyboardEvent was the user pressing
+ * enter (or return), and false otherwise.
+ */
+function isEnterKeystroke(e) {
+  return (
+    !e.altKey &&
+    !e.ctrlKey &&
+    !e.metaKey &&
+    (e.code === "Enter" || e.code === "Return")
+  );
+}
+
+/**
+ * Accepts a KeyboardEvent and returns true
+ * if that KeyboardEvent was the user pressing
+ * backspace (or delete), and false otherwise.
+ */
+function isBackspaceKeystroke(e) {
+  return (
+    !e.altKey &&
+    !e.ctrlKey &&
+    !e.metaKey &&
+    (e.code === "Backspace" || e.code === "Delete")
+  );
+}
+
+/**
+ * Accepts a string, and returns if it is a valid English word.
+ */
+function isEnglishWord(str) {
+  return _DICTIONARY.has(str) || _COMMON_WORDS.has(str);
+}
+
+/**
+ * Returns a random common word from the English lexicon,
+ * that is NUM_LETTERS long.
+ *
+ * Throws an error if no such word exists.
+ */
+function getRandomWord() {
+  const nLetterWords = [..._COMMON_WORDS].filter(
+    (word) => word.length === NUM_LETTERS,
+  );
+
+  if (nLetterWords.length === 0) {
+    throw new Error(
+      `The list of common words does not have any words that are ${NUM_LETTERS} long!`,
+    );
+  }
+
+  return nLetterWords[randomInteger(0, nLetterWords.length)];
+}
+
+/** Main Function */
+function Wordle() {
+  // initialize the game
+  let game = initializeGame();
+
+  // initialize graphics
+  let gw = GWindow(GWINDOW_WIDTH, GWINDOW_HEIGHT);
+  let gameView = initializeView(game);
+  gw.add(drawEmptyGrid());
+  gw.add(gameView.alert);
+  gw.add(gameView.keyboard);
+
+  // setup event listeners
+  function clickAction(e) {
+    if (game.status !== GAME_STATUS.PLAYING) {
+      return;
+    }
+    if (e) {
+      e = e.toUpperCase();
+    } else {
+      return;
+    }
+    if (game.guessInProgress.length < NUM_LETTERS) {
+      console.log(e);
+      game.guessInProgress += e;
+      // render the current row
+      let row = createRow(game.guessInProgress);
+      let rowView = drawRow(row, gameView.currentRow, gw);
+      if (gameView.currentColumn === 0) {
+        // this is a new row
+        gameView.grid.push(rowView);
+      } else {
+        // update the grid
+        gameView.grid[gameView.currentRow] = rowView;
+        // remove the existing Row from GW
+        gw.remove(gameView.grid[gameView.currentRow]);
+      }
+      drawRow(row, gameView.currentRow, gw);
+      gameView.currentColumn += 1;
+    }
+  }
+
+  function enterAction(e) {
+    if (game.status !== GAME_STATUS.PLAYING) {
+      return;
+    }
+    console.log("Enter with ", game.guessInProgress, gameView.currentRow);
+    let guess = game.guessInProgress.trim();
+
+    if (guess.length < NUM_LETTERS) {
+      gw.remove(gameView.alert);
+      gameView.alert = drawAlert(
+        `You guessed ${guess} but it's too short.`,
+        game.status,
+      );
+      gw.add(gameView.alert);
+    } else if (!isEnglishWord(guess.toLowerCase())) {
+      gw.remove(gameView.alert);
+      gameView.alert = drawAlert(
+        `You guessed ${guess} but it's not an English word.`,
+        game.status,
+      );
+      gw.add(gameView.alert);
+    } else {
+      // update the grid
+      gw.remove(gameView.grid[gameView.currentRow]); // remove the current row
+      let row = createRow(guess, game.secret); // create the model for the new row
+      let rowView = drawRow(row, gameView.currentRow, gw); // create the view for the new row
+      game.guessedRows.push(row); // submit the current row
+
+      // check win / lose
+      if (game.guessInProgress === game.secret) {
+        game.status = GAME_STATUS.WON;
+        gw.remove(gameView.alert); // remove the current alert
+        gameView.alert = drawAlert(
+          `You won! The secret word is ${game.secret}.`,
+          game.status,
+        );
+        gw.add(gameView.alert);
+      } else if (gameView.currentRow === NUM_GUESSES - 1) {
+        game.status = GAME_STATUS.LOST;
+        gw.remove(gameView.alert);
+        gameView.alert = drawAlert(
+          `You lost! The secret word is ${game.secret}.`,
+          game.status,
+        );
+        gw.add(gameView.alert);
+      } else {
+        gameView.currentRow += 1; // move the cursor row
+        gameView.currentColumn = 0; // reset the cursor column
+        game = saveGuessToGame(row, game);
+        updateKeyColor(gameView.keyboard, game); // update keyboard colors
+      }
+      // reset, clean up and move on
+      game.guessInProgress = ""; // reset the string
+      gameView.grid.push(rowView); // update the grid view
+    }
+  }
+
+  function backspaceAction(e) {
+    if (game.status !== GAME_STATUS.PLAYING) {
+      return;
+    }
+    console.log("Backspace!");
+    game.guessInProgress = game.guessInProgress.substring(
+      0,
+      gameView.currentColumn - 1,
+    ); // remove one last character from guessInProgress
+    // redraw the current row
+    let row = createRow(game.guessInProgress);
+    let rowView = drawRow(row, gameView.currentRow, gw);
+    gameView.grid[gameView.currentRow] = rowView; // update the grid
+    gw.remove(gameView.grid[gameView.currentRow]); // remove the existing Row from GW
+    drawRow(row, gameView.currentRow, gw); // redraw the new row
+    gameView.currentColumn -= 1; // move the cursor back by 1
+  }
+
+  function keyDownAction(e) {
+    let key = getKeystrokeLetter(e);
+    if (isEnterKeystroke(e)) {
+      enterAction(e);
+    } else if (isBackspaceKeystroke(e)) {
+      backspaceAction(e);
+    } else {
+      clickAction(key);
+    }
+  }
+
+  gameView.keyboard.addEventListener("keyclick", clickAction);
+  gameView.keyboard.addEventListener("enter", enterAction);
+  gameView.keyboard.addEventListener("backspace", backspaceAction);
+  gw.addEventListener("keydown", keyDownAction);
+
+  // Extension: click to restart game
+
+  function resetGameAction() {
+    if (game.status === GAME_STATUS.WON || game.status === GAME_STATUS.LOST) {
+      gw.remove(gameView.alert);
+
+      game = initializeGame();
+      gameView = initializeView(game);
+      gw.add(drawEmptyGrid());
+      gw.add(gameView.alert);
+    } else {
+      return;
+    }
+  }
+
+  gw.addEventListener("click", resetGameAction);
+}
+
+function initializeGame() {
+  let game = {
+    status: GAME_STATUS.PLAYING,
+    secret: "WORLD",
+    guessedRows: [],
+    guessInProgress: "",
+    foundLetters: "",
+    correctLetters: "",
+    wrongLetters: "",
+  };
+  return game;
+}
+
+function initializeView(game) {
+  let gameView = {
+    grid: [],
+    alert: drawAlert(
+      "Type or click on the keyboard to start. Good luck!",
+      game.status,
+    ),
+    keyboard: GKeyboard(
+      KEYBOARD_X,
+      KEYBOARD_Y,
+      GWINDOW_WIDTH,
+      TEXT_DEFAULT_COLOR,
+      KEYBOARD_DEFAULT_COLOR,
+    ),
+    currentRow: 0,
+    currentColumn: 0,
+  };
+  return gameView;
+}
+
+// Draw Empty Grid
+function drawEmptyGrid() {
+  let gridCompound = GCompound();
+  for (let i = 0; i < NUM_GUESSES; i++) {
+    let rowView = drawRow(EMPTY_ROW, i);
+    rowView.setLocation(
+      GRID_MARGIN,
+      GUESS_MARGIN + (GUESS_SQUARE_SIZE + GUESS_MARGIN) * i,
+    );
+    gridCompound.add(rowView);
+  }
+  return gridCompound;
+}
+
+// Create Row Model
+function createRow(guess, secret) {
+  let row = [];
+  let colorCodes = [];
+  for (let i = 0; i < NUM_LETTERS; i++) {
+    if (secret === undefined) {
+      colorCodes = [2, 2, 2, 2, 2]; // use the value 2 for normal color
+    } else {
+      colorCodes = checkGuessWithSecret(guess, secret);
+    }
+    if (guess) {
+      let currentletter = guess.substring(i, i + 1);
+      row.push([currentletter, colorCodes[i]]);
+    } else {
+      row = EMPTY_ROW;
+    }
+  }
+  return row;
+}
+
+function drawRow(row, currentRow, gw) {
+  let rowCompound = GCompound();
+  for (let i = 0; i < row.length; i++) {
+    let square = drawGuessSquare(row[i][0], row[i][1]);
+    rowCompound.add(square, (GUESS_SQUARE_SIZE + GUESS_MARGIN) * i, 0);
+  }
+  if (gw !== undefined) {
+    gw.add(
+      rowCompound,
+      GRID_MARGIN,
+      GUESS_MARGIN + (GUESS_SQUARE_SIZE + GUESS_MARGIN) * currentRow,
+    );
+  }
+  return rowCompound;
+}
+
+// Draw Square
+function drawGuessSquare(letter, color) {
+  let square = GCompound();
+  let squareBox = GRect(0, 0, GUESS_SQUARE_SIZE, GUESS_SQUARE_SIZE);
+  squareBox.setFilled(true);
+  squareBox.setColor(BORDER_COLOR);
+  switch (color) {
+    case -1:
+      squareBox.setFillColor(BACKGROUND_WRONG_COLOR);
+      break;
+    case 0:
+      squareBox.setFillColor(BACKGROUND_FOUND_COLOR);
+      break;
+    case 1:
+      squareBox.setFillColor(BACKGROUND_CORRECT_COLOR);
+      break;
+    default:
+      squareBox.setFillColor(BACKGROUND_DEFAULT_COLOR);
+  }
+  let squareText = GLabel(letter.toUpperCase());
+  squareText.setFont(GUESS_FONT);
+  squareText.setColor(TEXT_DEFAULT_COLOR);
+  square.add(squareBox);
+  square.add(
+    squareText,
+    (GUESS_SQUARE_SIZE - squareText.getWidth()) / 2,
+    GUESS_SQUARE_SIZE - squareText.getAscent() + 8,
+  );
+  return square;
+}
+
+//Alert
+function drawAlert(text, gameStatus) {
+  let alert = GLabel(text, ALERT_X, ALERT_Y);
+  alert.setTextAlign("center");
+  if (gameStatus === GAME_STATUS.WON) {
+    alert.setColor(TEXT_WIN_COLOR);
+  } else if (gameStatus === GAME_STATUS.LOST) {
+    alert.setColor(TEXT_LOSS_COLOR);
+  } else {
+    alert.setColor(TEXT_DEFAULT_COLOR);
+  }
+  return alert;
+}
+
+// Keyboard color update
+function updateKeyColor(keyboard, game) {
+  for (let i = 0; i < game.foundLetters.length; i++) {
+    let letter = game.foundLetters.substring(i, i + 1);
+    keyboard.setKeyColor(letter, BACKGROUND_FOUND_COLOR);
+  }
+  for (let i = 0; i < game.correctLetters.length; i++) {
+    let letter = game.correctLetters.substring(i, i + 1);
+    keyboard.setKeyColor(letter, BACKGROUND_CORRECT_COLOR);
+  }
+  for (let i = 0; i < game.wrongLetters.length; i++) {
+    let letter = game.wrongLetters.substring(i, i + 1);
+    keyboard.setKeyColor(letter, BACKGROUND_WRONG_COLOR);
+  }
+}
+
+/* Helper: checkGuessWithSecret(guess, secret)
+ * Checks a guess against a secret string, returning an array indicating matches.
+ * For each position i in the guess:
+ * - 1 if the character matches the secret at position i (exact match).
+ * - 0 if the character is in the secret but not at position i (present elsewhere).
+ * - -1 if the character is not in the secret.
+ */
+function checkGuessWithSecret(guess, secret) {
+  let match = [];
+  let matchedPos = 0;
+  for (let i = 0; i < guess.length; i++) {
+    let currentLetter = guess.substring(i, i + 1);
+    matchedPos = secret.indexOf(currentLetter);
+    if (matchedPos === -1) {
+      match.push(-1);
+    } else if (matchedPos === i) {
+      match.push(1);
+    } else {
+      match.push(0);
+    }
+  }
+  return match;
+}
+
+function saveGuessToGame(row, game) {
+  for (let i = 0; i < row.length; i++) {
+    let letter = row[i][0];
+    let color = row[i][1];
+    if (color > 1) continue;
+    if (color === 1) {
+      game.foundLetters.split(letter).join(""); // remove this letter from foundLetters
+      game.correctLetters += letter; // add this letter to correctLetters
+    } else if (color === 0) {
+      game.foundLetters += letter; // add this letter to foundLetters
+    } else if (color === -1) {
+      game.wrongLetters += letter; // add this letter to wrongLetters
+    }
+  }
+  return game;
+}
