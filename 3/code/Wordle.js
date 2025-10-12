@@ -167,7 +167,6 @@ function Wordle() {
       return;
     }
     if (game.guessInProgress.length < NUM_LETTERS) {
-      console.log(e);
       game.guessInProgress += e;
       // render the current row
       let row = createRow(game.guessInProgress);
@@ -180,23 +179,12 @@ function Wordle() {
     if (game.status !== GAME_STATUS.PLAYING) {
       return;
     }
-    console.log("Enter with ", game.guessInProgress, gameView.currentRow);
     let guess = game.guessInProgress.trim();
 
     if (guess.length < NUM_LETTERS) {
-      gw.remove(gameView.alert);
-      gameView.alert = drawAlert(
-        `You guessed ${guess} but it's too short.`,
-        game.status,
-      );
-      gw.add(gameView.alert);
+      updateAlert(`You guessed ${guess} but it's too short.`, game.status, gw, gameView);
     } else if (!isEnglishWord(guess.toLowerCase())) {
-      gw.remove(gameView.alert);
-      gameView.alert = drawAlert(
-        `You guessed ${guess} but it's not an English word.`,
-        game.status,
-      );
-      gw.add(gameView.alert);
+      updateAlert(`You guessed ${guess} but it's not an English word.`, game.status, gw, gameView);
     } else {
       // update the grid
       let row = createRow(guess, game.secret); // create the model for the new row
@@ -206,20 +194,10 @@ function Wordle() {
       // check win / lose
       if (game.guessInProgress === game.secret) {
         game.status = GAME_STATUS.WON;
-        gw.remove(gameView.alert); // remove the current alert
-        gameView.alert = drawAlert(
-          `You won! The secret word is ${game.secret}.`,
-          game.status,
-        );
-        gw.add(gameView.alert);
+        updateAlert(`You won! The secret word is ${game.secret}.`, game.status, gw, gameView);
       } else if (gameView.currentRow === NUM_GUESSES - 1) {
         game.status = GAME_STATUS.LOST;
-        gw.remove(gameView.alert);
-        gameView.alert = drawAlert(
-          `You lost! The secret word is ${game.secret}.`,
-          game.status,
-        );
-        gw.add(gameView.alert);
+        updateAlert(`You lost! The secret word is ${game.secret}.`, game.status, gw, gameView);
       } else {
         gameView.currentRow += 1; // move the cursor row
         gameView.currentColumn = 0; // reset the cursor column
@@ -235,7 +213,6 @@ function Wordle() {
     if (game.status !== GAME_STATUS.PLAYING) {
       return;
     }
-    console.log("Backspace!");
     game.guessInProgress = game.guessInProgress.substring(
       0,
       gameView.currentColumn - 1,
@@ -268,10 +245,10 @@ function Wordle() {
     if (game.status === GAME_STATUS.WON || game.status === GAME_STATUS.LOST) {
       gw.remove(gameView.grid);
       gw.remove(gameView.alert);
-      resetAllColors(gameView.keyboard); // reset the keyboard colors
       game = initializeGame();
       gameView = initializeView(game);
       gameView.grid = drawEmptyGrid();
+      resetAllColors(gameView.keyboard); // reset the keyboard colors
       gw.add(gameView.grid);
       gw.add(gameView.alert);
     } else {
@@ -330,7 +307,7 @@ function initializeView(game) {
 function drawEmptyGrid() {
   let gridCompound = GCompound();
   for (let i = 0; i < NUM_GUESSES; i++) {
-    let rowView = drawRow(EMPTY_ROW, i, gridCompound);
+    gridCompound.add(drawRow(EMPTY_ROW, i, gridCompound));
   }
   return gridCompound;
 }
@@ -342,12 +319,12 @@ function drawEmptyGrid() {
 function createRow(guess, secret) {
   let row = [];
   let colorCodes = [];
+  if (secret) {
+    colorCodes = checkGuessWithSecret(guess, secret);
+  } else {
+    colorCodes = [2, 2, 2, 2, 2]; // use the value 2 for normal color
+  }
   for (let i = 0; i < NUM_LETTERS; i++) {
-    if (secret === undefined) {
-      colorCodes = [2, 2, 2, 2, 2]; // use the value 2 for normal color
-    } else {
-      colorCodes = checkGuessWithSecret(guess, secret);
-    }
     if (guess) {
       let currentletter = guess.substring(i, i + 1);
       row.push([currentletter, colorCodes[i]]);
@@ -491,9 +468,21 @@ function saveGuessToGame(row, game) {
   return game;
 }
 
+/**
+ * Resets all keyboard key colors to the default color.
+ */
 function resetAllColors(keyboard) {
   let keys = "QWERTYUIOPASDFGHJKLZXCVBNM";
   for (let i = 0; i < keys.length; i++) {
     keyboard.setKeyColor(keys[i], KEYBOARD_DEFAULT_COLOR);
   }
+}
+
+/**
+ * Updates the alert message with the given message and game status.
+ */
+function updateAlert(message, gameStatus, gw, gameView) {
+  gw.remove(gameView.alert);
+  gameView.alert = drawAlert(message, gameStatus);
+  gw.add(gameView.alert);
 }
