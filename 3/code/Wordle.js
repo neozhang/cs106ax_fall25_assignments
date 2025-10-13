@@ -157,6 +157,54 @@ function Wordle() {
   gw.add(gameView.keyboard);
 
   // setup event listeners
+  setEventListeners(gw, game, gameView);
+}
+
+/**
+ * Initializes a new game with default state.
+ * Returns a game object with playing status and empty progress.
+ */
+function initializeGame() {
+  let game = {
+    status: GAME_STATUS.PLAYING,
+    secret: "WORLD",
+    guessedRows: [],
+    guessInProgress: "",
+    foundLetters: "",
+    correctLetters: "",
+    wrongLetters: "",
+  };
+  return game;
+}
+
+/**
+ * Initializes the game view with grid, alert, and keyboard.
+ * Returns a view object containing all UI components.
+ */
+function initializeView(game) {
+  let gameView = {
+    grid: drawEmptyGrid(),
+    alert: drawAlert(
+      "Type or click on the keyboard to start. Good luck!",
+      game.status,
+    ),
+    keyboard: GKeyboard(
+      KEYBOARD_X,
+      KEYBOARD_Y,
+      GWINDOW_WIDTH,
+      TEXT_DEFAULT_COLOR,
+      KEYBOARD_DEFAULT_COLOR,
+    ),
+    currentRow: 0,
+    currentColumn: 0,
+  };
+  return gameView;
+}
+
+/**
+ * Initializes event listeners for the game view.
+ */
+function setEventListeners(gw, game, gameView) {
   function clickAction(e) {
     if (game.status !== GAME_STATUS.PLAYING) {
       return;
@@ -182,9 +230,19 @@ function Wordle() {
     let guess = game.guessInProgress.trim();
 
     if (guess.length < NUM_LETTERS) {
-      updateAlert(`You guessed ${guess} but it's too short.`, game.status, gw, gameView);
+      updateAlert(
+        `You guessed ${guess} but it's too short.`,
+        game.status,
+        gw,
+        gameView,
+      );
     } else if (!isEnglishWord(guess.toLowerCase())) {
-      updateAlert(`You guessed ${guess} but it's not an English word.`, game.status, gw, gameView);
+      updateAlert(
+        `You guessed ${guess} but it's not an English word.`,
+        game.status,
+        gw,
+        gameView,
+      );
     } else {
       // update the grid
       let row = createRow(guess, game.secret); // create the model for the new row
@@ -194,10 +252,20 @@ function Wordle() {
       // check win / lose
       if (game.guessInProgress === game.secret) {
         game.status = GAME_STATUS.WON;
-        updateAlert(`You won! The secret word is ${game.secret}.`, game.status, gw, gameView);
+        updateAlert(
+          `You won! The secret word is ${game.secret}.`,
+          game.status,
+          gw,
+          gameView,
+        );
       } else if (gameView.currentRow === NUM_GUESSES - 1) {
         game.status = GAME_STATUS.LOST;
-        updateAlert(`You lost! The secret word is ${game.secret}.`, game.status, gw, gameView);
+        updateAlert(
+          `You lost! The secret word is ${game.secret}.`,
+          game.status,
+          gw,
+          gameView,
+        );
       } else {
         gameView.currentRow += 1; // move the cursor row
         gameView.currentColumn = 0; // reset the cursor column
@@ -257,47 +325,6 @@ function Wordle() {
   }
 
   gw.addEventListener("click", resetGameAction);
-}
-
-/**
- * Initializes a new game with default state.
- * Returns a game object with playing status and empty progress.
- */
-function initializeGame() {
-  let game = {
-    status: GAME_STATUS.PLAYING,
-    secret: "WORLD",
-    guessedRows: [],
-    guessInProgress: "",
-    foundLetters: "",
-    correctLetters: "",
-    wrongLetters: "",
-  };
-  return game;
-}
-
-/**
- * Initializes the game view with grid, alert, and keyboard.
- * Returns a view object containing all UI components.
- */
-function initializeView(game) {
-  let gameView = {
-    grid: drawEmptyGrid(),
-    alert: drawAlert(
-      "Type or click on the keyboard to start. Good luck!",
-      game.status,
-    ),
-    keyboard: GKeyboard(
-      KEYBOARD_X,
-      KEYBOARD_Y,
-      GWINDOW_WIDTH,
-      TEXT_DEFAULT_COLOR,
-      KEYBOARD_DEFAULT_COLOR,
-    ),
-    currentRow: 0,
-    currentColumn: 0,
-  };
-  return gameView;
 }
 
 /**

@@ -1,0 +1,3 @@
+[ ] Code Organization & Structure
+- Function Length: The Wordle() function (lines 148-283) is quite long at 135 lines. Consider breaking it into smaller functions: setupEventListeners(), handleGameActions() ,resetGameLogic()
+- Nested Functions: The event handler functions (clickAction, enterAction, backspaceAction) are defined inside Wordle() but could be extracted as separate functions for better testability and reusability.
