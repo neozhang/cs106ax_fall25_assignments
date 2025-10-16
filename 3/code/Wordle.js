@@ -227,64 +227,64 @@ function setEventListeners(gw, game, gameView) {
     }
   }
 
-  function enterAction(e) {
-    if (game.status !== GAME_STATUS.PLAYING && game.status !== GAME_STATUS.ALERT) {
-      return;
-    }
-    let guess = game.guessInProgress.trim();
-
-    if (guess.length < NUM_LETTERS) {
-      game.status = GAME_STATUS.ALERT;
-      updateAlert(
-        `You guessed ${guess} but it's too short.`,
-        game.status,
-        gw,
-        gameView,
-      );
-    } else if (!isEnglishWord(guess.toLowerCase())) {
-      game.status = GAME_STATUS.ALERT;
-      updateAlert(
-        `You guessed ${guess} but it's not an English word.`,
-        game.status,
-        gw,
-        gameView,
-      );
-    } else {
-      // update the grid
-      let row = createRow(guess, game.secret); // create the model for the new row
-      let rowView = drawRow(row, gameView.currentRow, gameView.grid); // create the view for the new row
-      game.guessedRows.push(row); // submit the current row
-
-      // check win / lose
-      if (game.guessInProgress === game.secret) {
-        game.status = GAME_STATUS.WON;
+  function enterAction() {
+    if (game.status === GAME_STATUS.PLAYING || game.status === GAME_STATUS.ALERT) {
+      let guess = game.guessInProgress.trim();
+      if (guess.length < NUM_LETTERS) {
+        game.status = GAME_STATUS.ALERT;
         updateAlert(
-          `You won! The secret word is ${game.secret}.`,
+          `You guessed ${guess} but it's too short.`,
           game.status,
           gw,
           gameView,
         );
-      } else if (gameView.currentRow === NUM_GUESSES - 1) {
-        game.status = GAME_STATUS.LOST;
+      } else if (!isEnglishWord(guess.toLowerCase())) {
+        game.status = GAME_STATUS.ALERT;
         updateAlert(
-          `You lost! The secret word is ${game.secret}.`,
+          `You guessed ${guess} but it's not an English word.`,
           game.status,
           gw,
           gameView,
         );
       } else {
-        gameView.currentRow += 1; // move the cursor row
-        gameView.currentColumn = 0; // reset the cursor column
-        game = saveGuessToGame(row, game);
-        updateKeyColor(gameView.keyboard, game); // update keyboard colors
-        updateAlert("Keep guessing!", game.status, gw, gameView);
+        // update the grid
+        let row = createRow(guess, game.secret); // create the model for the new row
+        let rowView = drawRow(row, gameView.currentRow, gameView.grid); // create the view for the new row
+        game.guessedRows.push(row); // submit the current row
+
+        // check win / lose
+        if (game.guessInProgress === game.secret) {
+          game.status = GAME_STATUS.WON;
+          updateAlert(
+            `You won! The secret word is ${game.secret}. Press Enter to restart.`,
+            game.status,
+            gw,
+            gameView,
+          );
+        } else if (gameView.currentRow === NUM_GUESSES - 1) {
+          game.status = GAME_STATUS.LOST;
+          updateAlert(
+            `You lost! The secret word is ${game.secret}. Press Enter to restart.`,
+            game.status,
+            gw,
+            gameView,
+          );
+        } else {
+          gameView.currentRow += 1; // move the cursor row
+          gameView.currentColumn = 0; // reset the cursor column
+          game = saveGuessToGame(row, game);
+          updateKeyColor(gameView.keyboard, game); // update keyboard colors
+          updateAlert("Keep guessing!", game.status, gw, gameView);
+        }
+        // reset, clean up and move on
+        game.guessInProgress = ""; // reset the string
       }
-      // reset, clean up and move on
-      game.guessInProgress = ""; // reset the string
+    } else {
+      resetGame(gw, game, gameView);
     }
   }
 
-  function backspaceAction(e) {
+  function backspaceAction() {
     if (game.status !== GAME_STATUS.PLAYING && game.status !== GAME_STATUS.ALERT) {
       return;
     }
@@ -307,9 +307,9 @@ function setEventListeners(gw, game, gameView) {
   function keyDownAction(e) {
     let key = getKeystrokeLetter(e);
     if (isEnterKeystroke(e)) {
-      enterAction(e);
+      enterAction();
     } else if (isBackspaceKeystroke(e)) {
-      backspaceAction(e);
+      backspaceAction();
     } else {
       keyClickAction(key);
     }
@@ -319,32 +319,6 @@ function setEventListeners(gw, game, gameView) {
   gameView.keyboard.addEventListener("enter", enterAction);
   gameView.keyboard.addEventListener("backspace", backspaceAction);
   gw.addEventListener("keydown", keyDownAction);
-
-  // // Extension: click to restart game
-
-  // function resetGameAction() {
-  //   if (game.status === GAME_STATUS.WON || game.status === GAME_STATUS.LOST) {
-  //     gw.remove(gameView.grid);
-  //     gw.remove(gameView.alert);
-  //     gw.remove(gameView.keyboard);
-  //     game = initializeGame();
-  //     gameView = initializeView(game);
-  //     gameView.grid = drawEmptyGrid();
-  //     resetAllColors(gameView.keyboard); // reset the keyboard colors
-  //     gw.add(gameView.grid);
-  //     gw.add(gameView.alert);
-  //     gw.add(gameView.keyboard);
-      
-  //     // Re-add event listeners to the new keyboard
-  //     gameView.keyboard.addEventListener("keyclick", keyClickAction);
-  //     gameView.keyboard.addEventListener("enter", enterAction);
-  //     gameView.keyboard.addEventListener("backspace", backspaceAction);
-  //   } else {
-  //     return;
-  //   }
-  // }
-
-  // gw.addEventListener("click", resetGameAction);
 }
 
 /**
@@ -518,6 +492,53 @@ function saveGuessToGame(row, game) {
 }
 
 /**
+ * Updates the alert message with the given message and game status.
+ */
+function updateAlert(message, gameStatus, gw, gameView) {
+  gw.remove(gameView.alert);
+  gameView.alert = drawAlert(message, gameStatus);
+  gw.add(gameView.alert);
+}
+
+/**
+ * Extension: Enter key to restart game when game is won or lost
+ */
+function resetGame(gw, game, gameView) {
+  if (game.status === GAME_STATUS.WON || game.status === GAME_STATUS.LOST) {
+    // Remove old UI
+    gw.remove(gameView.grid);
+    gw.remove(gameView.alert);
+
+    // Reinitialize game state
+    const newGame = initializeGame();
+    game.status = newGame.status;
+    game.secret = newGame.secret;
+    game.guessedRows = newGame.guessedRows;
+    game.guessInProgress = newGame.guessInProgress;
+    game.foundLetters = newGame.foundLetters;
+    game.correctLetters = newGame.correctLetters;
+    game.wrongLetters = newGame.wrongLetters;
+
+    // Reset view state
+    gameView.currentRow = 0;
+    gameView.currentColumn = 0;
+    gameView.grid = drawEmptyGrid();
+    gameView.alert = drawAlert(
+      "Type or click on the keyboard to start. Good luck!",
+      game.status,
+    );
+
+    // Reset the keyboard colors
+    resetAllColors(gameView.keyboard);
+
+    // Add back the new UI
+    gw.add(gameView.grid);
+    gw.add(gameView.alert);
+  }
+}
+
+
+/**
  * Resets all keyboard key colors to the default color.
  */
 function resetAllColors(keyboard) {
@@ -525,13 +546,4 @@ function resetAllColors(keyboard) {
   for (let i = 0; i < keys.length; i++) {
     keyboard.setKeyColor(keys[i], KEYBOARD_DEFAULT_COLOR);
   }
-}
-
-/**
- * Updates the alert message with the given message and game status.
- */
-function updateAlert(message, gameStatus, gw, gameView) {
-  gw.remove(gameView.alert);
-  gameView.alert = drawAlert(message, gameStatus);
-  gw.add(gameView.alert);
 }
