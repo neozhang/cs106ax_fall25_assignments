@@ -65,6 +65,7 @@ const ALERT_FONT = "700 13px HelveticaNeue";
 // Game states
 const GAME_STATUS = {
   PLAYING: "PLAYING",
+  ALERT: "ALERT",
   WON: "WON",
   LOST: "LOST",
 };
@@ -167,7 +168,7 @@ function Wordle() {
 function initializeGame() {
   let game = {
     status: GAME_STATUS.PLAYING,
-    secret: "WORLD",
+    secret: getRandomWord().toUpperCase(),
     guessedRows: [],
     guessInProgress: "",
     foundLetters: "",
@@ -205,31 +206,35 @@ function initializeView(game) {
  * Initializes event listeners for the game view.
  */
 function setEventListeners(gw, game, gameView) {
-  function clickAction(e) {
-    if (game.status !== GAME_STATUS.PLAYING) {
-      return;
+  function keyClickAction(e) {
+    if (game.status !== GAME_STATUS.PLAYING && game.status !== GAME_STATUS.ALERT) {
+      return; // early return to block keyclicks on non-playing status
     }
     if (e) {
-      e = e.toUpperCase();
-    } else {
-      return;
-    }
-    if (game.guessInProgress.length < NUM_LETTERS) {
-      game.guessInProgress += e;
-      // render the current row
-      let row = createRow(game.guessInProgress);
-      let rowView = drawRow(row, gameView.currentRow, gameView.grid);
-      gameView.currentColumn += 1;
+      // guard against edge cases
+      let letter = e.toUpperCase();
+      if (game.status === GAME_STATUS.ALERT) {
+        game.status = GAME_STATUS.PLAYING;
+        updateAlert("", game.status, gw, gameView);
+      }
+      if (game.guessInProgress.length < NUM_LETTERS) {
+        game.guessInProgress += letter;
+        // render the current row
+        let row = createRow(game.guessInProgress);
+        let rowView = drawRow(row, gameView.currentRow, gameView.grid);
+        gameView.currentColumn += 1;
+      }
     }
   }
 
   function enterAction(e) {
-    if (game.status !== GAME_STATUS.PLAYING) {
+    if (game.status !== GAME_STATUS.PLAYING && game.status !== GAME_STATUS.ALERT) {
       return;
     }
     let guess = game.guessInProgress.trim();
 
     if (guess.length < NUM_LETTERS) {
+      game.status = GAME_STATUS.ALERT;
       updateAlert(
         `You guessed ${guess} but it's too short.`,
         game.status,
@@ -237,6 +242,7 @@ function setEventListeners(gw, game, gameView) {
         gameView,
       );
     } else if (!isEnglishWord(guess.toLowerCase())) {
+      game.status = GAME_STATUS.ALERT;
       updateAlert(
         `You guessed ${guess} but it's not an English word.`,
         game.status,
@@ -271,6 +277,7 @@ function setEventListeners(gw, game, gameView) {
         gameView.currentColumn = 0; // reset the cursor column
         game = saveGuessToGame(row, game);
         updateKeyColor(gameView.keyboard, game); // update keyboard colors
+        updateAlert("Keep guessing!", game.status, gw, gameView);
       }
       // reset, clean up and move on
       game.guessInProgress = ""; // reset the string
@@ -278,17 +285,23 @@ function setEventListeners(gw, game, gameView) {
   }
 
   function backspaceAction(e) {
-    if (game.status !== GAME_STATUS.PLAYING) {
+    if (game.status !== GAME_STATUS.PLAYING && game.status !== GAME_STATUS.ALERT) {
       return;
     }
-    game.guessInProgress = game.guessInProgress.substring(
-      0,
-      gameView.currentColumn - 1,
-    ); // remove one last character from guessInProgress
-    // redraw the current row
-    let row = createRow(game.guessInProgress);
-    let rowView = drawRow(row, gameView.currentRow, gameView.grid);
-    gameView.currentColumn -= 1; // move the cursor back by 1
+    if (gameView.currentColumn > 0) {
+      if (game.status === GAME_STATUS.ALERT) {
+        game.status = GAME_STATUS.PLAYING;
+        updateAlert("", game.status, gw, gameView);
+      }
+      game.guessInProgress = game.guessInProgress.substring(
+        0,
+        gameView.currentColumn - 1,
+      ) + game.guessInProgress.substring(gameView.currentColumn); // remove character at currentColumn - 1
+      gameView.currentColumn -= 1; // move the cursor back by 1
+      // redraw the current row
+      let row = createRow(game.guessInProgress);
+      let rowView = drawRow(row, gameView.currentRow, gameView.grid);
+    }
   }
 
   function keyDownAction(e) {
@@ -298,33 +311,40 @@ function setEventListeners(gw, game, gameView) {
     } else if (isBackspaceKeystroke(e)) {
       backspaceAction(e);
     } else {
-      clickAction(key);
+      keyClickAction(key);
     }
   }
 
-  gameView.keyboard.addEventListener("keyclick", clickAction);
+  gameView.keyboard.addEventListener("keyclick", keyClickAction);
   gameView.keyboard.addEventListener("enter", enterAction);
   gameView.keyboard.addEventListener("backspace", backspaceAction);
   gw.addEventListener("keydown", keyDownAction);
 
-  // Extension: click to restart game
+  // // Extension: click to restart game
 
-  function resetGameAction() {
-    if (game.status === GAME_STATUS.WON || game.status === GAME_STATUS.LOST) {
-      gw.remove(gameView.grid);
-      gw.remove(gameView.alert);
-      game = initializeGame();
-      gameView = initializeView(game);
-      gameView.grid = drawEmptyGrid();
-      resetAllColors(gameView.keyboard); // reset the keyboard colors
-      gw.add(gameView.grid);
-      gw.add(gameView.alert);
-    } else {
-      return;
-    }
-  }
+  // function resetGameAction() {
+  //   if (game.status === GAME_STATUS.WON || game.status === GAME_STATUS.LOST) {
+  //     gw.remove(gameView.grid);
+  //     gw.remove(gameView.alert);
+  //     gw.remove(gameView.keyboard);
+  //     game = initializeGame();
+  //     gameView = initializeView(game);
+  //     gameView.grid = drawEmptyGrid();
+  //     resetAllColors(gameView.keyboard); // reset the keyboard colors
+  //     gw.add(gameView.grid);
+  //     gw.add(gameView.alert);
+  //     gw.add(gameView.keyboard);
+      
+  //     // Re-add event listeners to the new keyboard
+  //     gameView.keyboard.addEventListener("keyclick", keyClickAction);
+  //     gameView.keyboard.addEventListener("enter", enterAction);
+  //     gameView.keyboard.addEventListener("backspace", backspaceAction);
+  //   } else {
+  //     return;
+  //   }
+  // }
 
-  gw.addEventListener("click", resetGameAction);
+  // gw.addEventListener("click", resetGameAction);
 }
 
 /**
@@ -428,6 +448,8 @@ function drawAlert(text, gameStatus) {
     alert.setColor(TEXT_WIN_COLOR);
   } else if (gameStatus === GAME_STATUS.LOST) {
     alert.setColor(TEXT_LOSS_COLOR);
+  } else if (gameStatus === GAME_STATUS.ALERT) {
+    alert.setColor(TEXT_ALERT_COLOR);
   } else {
     alert.setColor(TEXT_DEFAULT_COLOR);
   }
@@ -484,7 +506,7 @@ function saveGuessToGame(row, game) {
     let color = row[i][1];
     if (color > 1) continue;
     if (color === 1) {
-      game.foundLetters.split(letter).join(""); // remove this letter from foundLetters
+      game.foundLetters = game.foundLetters.split(letter).join(""); // remove this letter from foundLetters
       game.correctLetters += letter; // add this letter to correctLetters
     } else if (color === 0) {
       game.foundLetters += letter; // add this letter to foundLetters
