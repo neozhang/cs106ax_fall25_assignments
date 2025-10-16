@@ -70,8 +70,16 @@ const GAME_STATUS = {
   LOST: "LOST",
 };
 
+// Color codes
+const COLOR_CODES = {
+  WRONG: -1,
+  FOUND: 0,
+  CORRECT: 1,
+  DEFAULT: 2,
+};
+
 // EMPTY ROW
-const EMPTY_ROW = Array.from({ length: NUM_LETTERS }, () => ["", 2]);
+const EMPTY_ROW = Array.from({ length: NUM_LETTERS }, () => ["", COLOR_CODES.DEFAULT]);
 
 /**
  * Accepts a KeyboardEvent and returns
@@ -253,7 +261,7 @@ function setEventListeners(gw, game, gameView) {
         game.guessedRows.push(row); // submit the current row
 
         // check win / lose
-        if (game.guessInProgress === game.secret) {
+        if (guess === game.secret) {
           game.status = GAME_STATUS.WON;
           updateAlert(
             `You won! The secret word is ${game.secret}. Press Enter to restart.`,
@@ -338,22 +346,15 @@ function drawEmptyGrid() {
  * Returns an array of [letter, color] pairs for display.
  */
 function createRow(guess, secret) {
-  let row = [];
-  let colorCodes = [];
-  if (secret) {
-    colorCodes = checkGuessWithSecret(guess, secret);
-  } else {
-    colorCodes = [2, 2, 2, 2, 2]; // use the value 2 for normal color
-  }
-  for (let i = 0; i < NUM_LETTERS; i++) {
-    if (guess) {
-      let currentletter = guess.substring(i, i + 1);
-      row.push([currentletter, colorCodes[i]]);
-    } else {
-      row = EMPTY_ROW;
+    if (!guess) return EMPTY_ROW;
+    const colorCodes = secret ? checkGuessWithSecret(guess, secret)
+                              : Array(NUM_LETTERS).fill(COLOR_CODES.DEFAULT);
+    const row = [];
+    for (let i = 0; i < NUM_LETTERS; i++) {
+      const currentLetter = guess.substring(i, i + 1);
+      row.push([currentLetter, colorCodes[i]]);
     }
-  }
-  return row;
+    return row;
 }
 
 /**
@@ -460,11 +461,11 @@ function checkGuessWithSecret(guess, secret) {
     let currentLetter = guess.substring(i, i + 1);
     matchedPos = secret.indexOf(currentLetter);
     if (matchedPos === -1) {
-      match.push(-1);
+      match.push(COLOR_CODES.WRONG);
     } else if (matchedPos === i) {
-      match.push(1);
+      match.push(COLOR_CODES.CORRECT);
     } else {
-      match.push(0);
+      match.push(COLOR_CODES.FOUND);
     }
   }
   return match;
@@ -478,13 +479,13 @@ function saveGuessToGame(row, game) {
   for (let i = 0; i < row.length; i++) {
     let letter = row[i][0];
     let color = row[i][1];
-    if (color > 1) continue;
-    if (color === 1) {
+    if (color > COLOR_CODES.CORRECT) continue;
+    if (color === COLOR_CODES.CORRECT) {
       game.foundLetters = game.foundLetters.split(letter).join(""); // remove this letter from foundLetters
       game.correctLetters += letter; // add this letter to correctLetters
-    } else if (color === 0) {
+    } else if (color === COLOR_CODES.FOUND) {
       game.foundLetters += letter; // add this letter to foundLetters
-    } else if (color === -1) {
+    } else if (color === COLOR_CODES.WRONG) {
       game.wrongLetters += letter; // add this letter to wrongLetters
     }
   }
@@ -504,37 +505,27 @@ function updateAlert(message, gameStatus, gw, gameView) {
  * Extension: Enter key to restart game when game is won or lost
  */
 function resetGame(gw, game, gameView) {
-  if (game.status === GAME_STATUS.WON || game.status === GAME_STATUS.LOST) {
-    // Remove old UI
-    gw.remove(gameView.grid);
-    gw.remove(gameView.alert);
+  if (game.status !== GAME_STATUS.WON && game.status !== GAME_STATUS.LOST) return;
 
-    // Reinitialize game state
-    const newGame = initializeGame();
-    game.status = newGame.status;
-    game.secret = newGame.secret;
-    game.guessedRows = newGame.guessedRows;
-    game.guessInProgress = newGame.guessInProgress;
-    game.foundLetters = newGame.foundLetters;
-    game.correctLetters = newGame.correctLetters;
-    game.wrongLetters = newGame.wrongLetters;
+  gw.remove(gameView.grid);
 
-    // Reset view state
-    gameView.currentRow = 0;
-    gameView.currentColumn = 0;
-    gameView.grid = drawEmptyGrid();
-    gameView.alert = drawAlert(
-      "Type or click on the keyboard to start. Good luck!",
-      game.status,
-    );
+  const newGame = initializeGame();
+  game.status = newGame.status;
+  game.secret = newGame.secret;
+  game.guessedRows = newGame.guessedRows;
+  game.guessInProgress = newGame.guessInProgress;
+  game.foundLetters = newGame.foundLetters;
+  game.correctLetters = newGame.correctLetters;
+  game.wrongLetters = newGame.wrongLetters;
 
-    // Reset the keyboard colors
-    resetAllColors(gameView.keyboard);
+  gameView.currentRow = 0;
+  gameView.currentColumn = 0;
+  gameView.grid = drawEmptyGrid();
+  gw.add(gameView.grid);
 
-    // Add back the new UI
-    gw.add(gameView.grid);
-    gw.add(gameView.alert);
-  }
+  resetAllColors(gameView.keyboard);
+  
+  updateAlert("Type or click on the keyboard to start. Good luck!", game.status, gw, gameView);
 }
 
 
