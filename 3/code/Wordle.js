@@ -79,7 +79,10 @@ const COLOR_CODES = {
 };
 
 // EMPTY ROW
-const EMPTY_ROW = Array.from({ length: NUM_LETTERS }, () => ["", COLOR_CODES.DEFAULT]);
+const EMPTY_ROW = Array.from({ length: NUM_LETTERS }, () => [
+  "",
+  COLOR_CODES.DEFAULT,
+]);
 
 /**
  * Accepts a KeyboardEvent and returns
@@ -215,7 +218,10 @@ function initializeView(game) {
  */
 function setEventListeners(gw, game, gameView) {
   function keyClickAction(e) {
-    if (game.status !== GAME_STATUS.PLAYING && game.status !== GAME_STATUS.ALERT) {
+    if (
+      game.status !== GAME_STATUS.PLAYING &&
+      game.status !== GAME_STATUS.ALERT
+    ) {
       return; // early return to block keyclicks on non-playing status
     }
     if (e) {
@@ -236,7 +242,10 @@ function setEventListeners(gw, game, gameView) {
   }
 
   function enterAction() {
-    if (game.status === GAME_STATUS.PLAYING || game.status === GAME_STATUS.ALERT) {
+    if (
+      game.status === GAME_STATUS.PLAYING ||
+      game.status === GAME_STATUS.ALERT
+    ) {
       let guess = game.guessInProgress.trim();
       if (guess.length < NUM_LETTERS) {
         game.status = GAME_STATUS.ALERT;
@@ -293,7 +302,10 @@ function setEventListeners(gw, game, gameView) {
   }
 
   function backspaceAction() {
-    if (game.status !== GAME_STATUS.PLAYING && game.status !== GAME_STATUS.ALERT) {
+    if (
+      game.status !== GAME_STATUS.PLAYING &&
+      game.status !== GAME_STATUS.ALERT
+    ) {
       return;
     }
     if (gameView.currentColumn > 0) {
@@ -301,10 +313,9 @@ function setEventListeners(gw, game, gameView) {
         game.status = GAME_STATUS.PLAYING;
         updateAlert("", game.status, gw, gameView);
       }
-      game.guessInProgress = game.guessInProgress.substring(
-        0,
-        gameView.currentColumn - 1,
-      ) + game.guessInProgress.substring(gameView.currentColumn); // remove character at currentColumn - 1
+      game.guessInProgress =
+        game.guessInProgress.substring(0, gameView.currentColumn - 1) +
+        game.guessInProgress.substring(gameView.currentColumn); // remove character at currentColumn - 1
       gameView.currentColumn -= 1; // move the cursor back by 1
       // redraw the current row
       let row = createRow(game.guessInProgress);
@@ -346,15 +357,16 @@ function drawEmptyGrid() {
  * Returns an array of [letter, color] pairs for display.
  */
 function createRow(guess, secret) {
-    if (!guess) return EMPTY_ROW;
-    const colorCodes = secret ? checkGuessWithSecret(guess, secret)
-                              : Array(NUM_LETTERS).fill(COLOR_CODES.DEFAULT);
-    const row = [];
-    for (let i = 0; i < NUM_LETTERS; i++) {
-      const currentLetter = guess.substring(i, i + 1);
-      row.push([currentLetter, colorCodes[i]]);
-    }
-    return row;
+  if (!guess) return EMPTY_ROW;
+  const colorCodes = secret
+    ? checkGuessWithSecret(guess, secret)
+    : Array(NUM_LETTERS).fill(COLOR_CODES.DEFAULT);
+  const row = [];
+  for (let i = 0; i < NUM_LETTERS; i++) {
+    const currentLetter = guess.substring(i, i + 1);
+    row.push([currentLetter, colorCodes[i]]);
+  }
+  return row;
 }
 
 /**
@@ -505,7 +517,8 @@ function updateAlert(message, gameStatus, gw, gameView) {
  * Extension: Enter key to restart game when game is won or lost
  */
 function resetGame(gw, game, gameView) {
-  if (game.status !== GAME_STATUS.WON && game.status !== GAME_STATUS.LOST) return;
+  if (game.status !== GAME_STATUS.WON && game.status !== GAME_STATUS.LOST)
+    return;
 
   gw.remove(gameView.grid);
 
@@ -524,10 +537,14 @@ function resetGame(gw, game, gameView) {
   gw.add(gameView.grid);
 
   resetAllColors(gameView.keyboard);
-  
-  updateAlert("Type or click on the keyboard to start. Good luck!", game.status, gw, gameView);
-}
 
+  updateAlert(
+    "Type or click on the keyboard to start. Good luck!",
+    game.status,
+    gw,
+    gameView,
+  );
+}
 
 /**
  * Resets all keyboard key colors to the default color.

@@ -131,7 +131,7 @@ function GKeyboard(x, y, width, textColor, defaultColor) {
     "⏎",
     0,
     KEYBOARD_MARGIN * 5 + squareSize * 2,
-    squareSize * 1.5
+    squareSize * 1.5,
   );
   compound.add(enter.compound);
 
@@ -139,7 +139,7 @@ function GKeyboard(x, y, width, textColor, defaultColor) {
     "←",
     width - squareSize * 1.5,
     KEYBOARD_MARGIN * 5 + squareSize * 2,
-    squareSize * 1.5
+    squareSize * 1.5,
   );
   compound.add(backspace.compound);
 
