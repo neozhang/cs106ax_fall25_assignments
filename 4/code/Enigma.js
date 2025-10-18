@@ -26,26 +26,44 @@ function Enigma() {
 // 3. Add listeners that forward mouse events to those objects.
 
 function runEnigmaSimulation(gw) {
-  let enigma = {};
+  let enigma = {
+    ALPHABET: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    keys: [],
+    inputLetters: "",
+  };
 
   // initialize the graphcis
-  const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  gw.add(createKeyboard(ALPHABET, 0, 0));
+  enigma.keys = initializeKeyboard(enigma.ALPHABET, 0, 0);
+  for (const key of enigma.keys) {
+    gw.add(key.element);
+  }
+  // initialize the event listeners
+  setEventListeners(gw, enigma);
 }
 
 /* Graphics */
 
-function createKeyboard(keys, x, y) {
-  const compound = GCompound(x, y);
-  for (let i = 0; i < keys.length; i++) {
+function initializeKeyboard(letters, x, y) {
+  let keys = [];
+  for (let i = 0; i < letters.length; i++) {
     let posX = KEY_LOCATIONS[i]["x"] - KEY_RADIUS;
     let posY = KEY_LOCATIONS[i]["y"] - KEY_RADIUS;
-    compound.add(createKeyboardKey(keys[i], posX, posY));
+    let key = {
+      letter: letters[i],
+      element: createKeyboardKey(
+        letters[i],
+        KEY_LOCATIONS[i]["x"] - KEY_RADIUS,
+        KEY_LOCATIONS[i]["y"] - KEY_RADIUS,
+        KEY_UP_COLOR,
+      ),
+    };
+    keys.push(key);
   }
-  return compound;
+
+  return keys;
 }
 
-function createKeyboardKey(key, x, y) {
+function createKeyboardKey(letter, x, y, keyColor) {
   const compound = GCompound(x, y);
   const innerOval = GOval(
     KEY_BORDER,
@@ -59,10 +77,10 @@ function createKeyboardKey(key, x, y) {
   outerOval.setFilled(true);
   outerOval.setColor(KEY_BORDER_COLOR);
 
-  key = key.charAt(0).toUpperCase();
-  const label = GLabel(key, KEY_RADIUS, KEY_RADIUS + KEY_LABEL_DY);
+  letter = letter.charAt(0).toUpperCase();
+  const label = GLabel(letter, KEY_RADIUS, KEY_RADIUS + KEY_LABEL_DY);
   label.setFont(KEY_FONT);
-  label.setColor(KEY_UP_COLOR);
+  label.setColor(keyColor);
   label.setTextAlign("center");
 
   compound.add(outerOval);
@@ -70,6 +88,52 @@ function createKeyboardKey(key, x, y) {
   compound.add(label);
 
   return compound;
+}
+
+/* Event Listeners */
+
+function setEventListeners(gw, enigma) {
+  // set up mouseDownAction for gw and forward to each key
+  let mouseDownAction = function (e) {
+    let obj = gw.getElementAt(e.getX(), e.getY());
+    if (obj === null) return;
+    for (const key of enigma.keys) {
+      if (key.element === obj) {
+        gw.remove(obj);
+        const newKeyElement = createKeyboardKey(
+          key.letter,
+          key.element.getX(),
+          key.element.getY(),
+          KEY_DOWN_COLOR,
+        );
+        gw.add(newKeyElement);
+        key.element = newKeyElement;
+        break;
+      }
+    }
+  };
+
+  let mouseUpAction = function (e) {
+    let obj = gw.getElementAt(e.getX(), e.getY());
+    if (obj === null) return;
+    for (const key of enigma.keys) {
+      if (key.element === obj) {
+        gw.remove(obj);
+        const newKeyElement = createKeyboardKey(
+          key.letter,
+          key.element.getX(),
+          key.element.getY(),
+          KEY_UP_COLOR,
+        );
+        gw.add(newKeyElement);
+        key.element = newKeyElement;
+        break;
+      }
+    }
+  };
+
+  gw.addEventListener("mousedown", mouseDownAction);
+  gw.addEventListener("mouseup", mouseUpAction);
 }
 
 /* String ops & encryption */
