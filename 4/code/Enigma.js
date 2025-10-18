@@ -29,14 +29,20 @@ function runEnigmaSimulation(gw) {
   let enigma = {
     ALPHABET: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
     keys: [],
+    lamps: [],
     inputLetters: "",
   };
 
   // initialize the graphcis
   enigma.keys = initializeKeyboard(enigma.ALPHABET, 0, 0);
+  enigma.lamps = initializeLamps(enigma.ALPHABET, 0, 0);
   for (const key of enigma.keys) {
     gw.add(key.element);
   }
+  for (const lamp of enigma.lamps) {
+    gw.add(lamp.element);
+  }
+
   // initialize the event listeners
   setEventListeners(gw, enigma);
 }
@@ -46,8 +52,6 @@ function runEnigmaSimulation(gw) {
 function initializeKeyboard(letters, x, y) {
   let keys = [];
   for (let i = 0; i < letters.length; i++) {
-    let posX = KEY_LOCATIONS[i]["x"] - KEY_RADIUS;
-    let posY = KEY_LOCATIONS[i]["y"] - KEY_RADIUS;
     let key = {
       letter: letters[i],
       element: createKeyboardKey(
@@ -59,7 +63,6 @@ function initializeKeyboard(letters, x, y) {
     };
     keys.push(key);
   }
-
   return keys;
 }
 
@@ -85,6 +88,43 @@ function createKeyboardKey(letter, x, y, keyColor) {
 
   compound.add(outerOval);
   compound.add(innerOval);
+  compound.add(label);
+
+  return compound;
+}
+
+function initializeLamps(letters, x, y) {
+  let lamps = [];
+  for (let i = 0; i < letters.length; i++) {
+    let lamp = {
+      letter: letters[i],
+      element: createLamp(
+        letters[i],
+        LAMP_LOCATIONS[i]["x"] - LAMP_RADIUS,
+        LAMP_LOCATIONS[i]["y"] - LAMP_RADIUS,
+        LAMP_OFF_COLOR,
+      ),
+    };
+    lamps.push(lamp);
+  }
+  return lamps;
+}
+
+function createLamp(letter, x, y, color) {
+  const compound = GCompound(x, y);
+
+  const oval = GOval(LAMP_RADIUS * 2, LAMP_RADIUS * 2);
+  oval.setColor(LAMP_BORDER_COLOR);
+  oval.setFilled(true);
+  oval.setFillColor(LAMP_BGCOLOR);
+
+  letter = letter.charAt(0).toUpperCase();
+  const label = GLabel(letter, LAMP_RADIUS, LAMP_RADIUS + LAMP_LABEL_DY);
+  label.setColor(color);
+  label.setFont(LAMP_FONT);
+  label.setTextAlign("center");
+
+  compound.add(oval);
   compound.add(label);
 
   return compound;
