@@ -61,7 +61,17 @@ function runEnigmaSimulation(gw) {
   enigma.keys = keyboard.keys;
   const lampPanel = new Keyboard(enigma, gw, false);
   enigma.lamps = lampPanel.keys;
-  const rotors = new Rotors(enigma, gw);
+  const rotorPanel = new RotorPanel(enigma, gw);
+  enigma.rotors = rotorPanel.rotors;
+
+  // set up the event forwarder
+  const eventForwarder = new EventForwarder(
+    enigma,
+    gw,
+    keyboard,
+    lampPanel,
+    rotorPanel,
+  );
 }
 
 /* Graphics */
@@ -70,6 +80,7 @@ class Keyboard {
   constructor(enigma, gw, clickable) {
     this.enigma = enigma;
     this.gw = gw;
+    this.clickable = clickable;
     this.style = clickable ? KEY_STYLE : LAMP_STYLE;
     const letters = enigma.ALPHABET;
     this.letters = letters;
@@ -95,7 +106,6 @@ class Keyboard {
     }
 
     this.keys = keys;
-    if (clickable) this.attachListeners();
   }
 
   createKey(
@@ -144,20 +154,6 @@ class Keyboard {
     return compound;
   }
 
-  attachListeners() {
-    const handleClick = (e) => {
-      const obj = this.gw.getElementAt(e.getX(), e.getY());
-      for (const key of this.keys) {
-        if (key.element === obj) {
-          this.toggleKeyColor(key);
-          this.toggleLampColor(key);
-        }
-      }
-    };
-    this.gw.addEventListener("mousedown", handleClick);
-    this.gw.addEventListener("mouseup", handleClick);
-  }
-
   toggleKeyColor(key) {
     this.gw.remove(key.element);
     const newColor =
@@ -202,7 +198,7 @@ class Keyboard {
   }
 }
 
-class Rotors {
+class RotorPanel {
   constructor(enigma, gw) {
     this.enigma = enigma;
     this.gw = gw;
@@ -211,6 +207,7 @@ class Rotors {
       let rotor = {
         index: i,
         letter: this.enigma.ALPHABET[0],
+        position: [ROTOR_LOCATIONS[i]["x"], ROTOR_LOCATIONS[i]["y"]],
         element: this.createRotor(
           this.enigma.ALPHABET[0],
           ROTOR_LOCATIONS[i]["x"],
@@ -221,7 +218,6 @@ class Rotors {
       this.gw.add(rotor.element);
     }
     this.rotors = rotors;
-    this.attachListeners();
   }
 
   createRotor(letter, x, y) {
@@ -242,7 +238,66 @@ class Rotors {
     compound.add(label);
     return compound;
   }
-  attachListeners() {}
+
+  advanceRotor(rotor) {
+    const idx = rotor.index;
+    const currentLetter = rotor.letter;
+    const permutation = ROTOR_PERMUTATIONS[idx];
+    const currentPos = permutation.indexOf(currentLetter);
+    const nextLetter =
+      currentPos < permutation.length - 1
+        ? permutation.charAt(currentPos + 1)
+        : permutation.charAt(currentPos - permutation.length + 1);
+    const x = rotor.position[0];
+    const y = rotor.position[1];
+    this.gw.remove(this.rotors[idx].element);
+    const newRotor = this.createRotor(nextLetter, x, y);
+    this.enigma.rotors[idx] = {
+      index: idx,
+      letter: nextLetter,
+      position: [x, y],
+      element: newRotor,
+    };
+    this.gw.add(newRotor);
+  }
+}
+
+/* Event Forwarder */
+
+class EventForwarder {
+  constructor(enigma, gw, keyboard, lampPanel, rotorPanel) {
+    this.enigma = enigma;
+    this.gw = gw;
+    this.keyboard = keyboard;
+    this.lampPanel = lampPanel;
+    this.rotorPanel = rotorPanel;
+
+    this.gw.addEventListener("mousedown", this.handleDown);
+    this.gw.addEventListener("mouseup", this.handleUp);
+  }
+
+  handleUp = (e) => {
+    const obj = this.gw.getElementAt(e.getX(), e.getY());
+    for (const key of this.enigma.keys) {
+      if (key.element === obj) {
+        this.keyboard.toggleKeyColor(key);
+        this.lampPanel.toggleLampColor(key);
+      }
+    }
+  };
+
+  handleDown = (e) => {
+    const obj = this.gw.getElementAt(e.getX(), e.getY());
+    for (const key of this.enigma.keys) {
+      if (key.element === obj) {
+        this.keyboard.toggleKeyColor(key);
+        this.lampPanel.toggleLampColor(key);
+      }
+    }
+    for (const rotor of this.enigma.rotors) {
+      if (rotor.element === obj) this.rotorPanel.advanceRotor(rotor);
+    }
+  };
 }
 
 /* String ops & encryption */
