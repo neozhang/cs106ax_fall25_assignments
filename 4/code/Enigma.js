@@ -49,8 +49,10 @@ const LAMP_STYLE = {
 function runEnigmaSimulation(gw) {
   let enigma = {
     ALPHABET: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    PERMUTATIONS: ROTOR_PERMUTATIONS,
     keys: [],
     lamps: [],
+    rotors: [],
     inputLetters: "",
   };
 
@@ -59,6 +61,7 @@ function runEnigmaSimulation(gw) {
   enigma.keys = keyboard.keys;
   const lampPanel = new Keyboard(enigma, gw, false);
   enigma.lamps = lampPanel.keys;
+  const rotors = new Rotors(enigma, gw);
 }
 
 /* Graphics */
@@ -197,6 +200,49 @@ class Keyboard {
     this.enigma.lamps[key.index] = lamp;
     this.gw.add(newLampElement);
   }
+}
+
+class Rotors {
+  constructor(enigma, gw) {
+    this.enigma = enigma;
+    this.gw = gw;
+    let rotors = [];
+    for (let i = 0; i < this.enigma.PERMUTATIONS.length; i++) {
+      let rotor = {
+        index: i,
+        letter: this.enigma.ALPHABET[0],
+        element: this.createRotor(
+          this.enigma.ALPHABET[0],
+          ROTOR_LOCATIONS[i]["x"],
+          ROTOR_LOCATIONS[i]["y"],
+        ),
+      };
+      rotors.push(rotor);
+      this.gw.add(rotor.element);
+    }
+    this.rotors = rotors;
+    this.attachListeners();
+  }
+
+  createRotor(letter, x, y) {
+    const compound = GCompound(x, y);
+    const rect = GRect(
+      -ROTOR_WIDTH / 2,
+      -ROTOR_HEIGHT / 2,
+      ROTOR_WIDTH,
+      ROTOR_HEIGHT,
+    );
+    rect.setFilled(true);
+    rect.setColor(ROTOR_BGCOLOR);
+    const label = GLabel(letter, 0, ROTOR_LABEL_DY);
+    label.setFont(ROTOR_FONT);
+    label.setColor(ROTOR_COLOR);
+    label.setTextAlign("center");
+    compound.add(rect);
+    compound.add(label);
+    return compound;
+  }
+  attachListeners() {}
 }
 
 /* String ops & encryption */
