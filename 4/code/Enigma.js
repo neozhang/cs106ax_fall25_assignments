@@ -347,6 +347,7 @@ class EventForwarder {
    * Handles mouse release events to reset keys and lamps.
    */
   handleUp = (e) => {
+    if (!this.key) return; // early return if no key is pressed
     const obj = this.gw.getElementAt(e.getX(), e.getY());
     for (const key of this.enigma.keys) {
       if (key.element === obj) {
