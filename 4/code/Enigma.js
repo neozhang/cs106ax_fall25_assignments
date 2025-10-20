@@ -8,6 +8,9 @@
 
 /* Main program */
 
+/**
+ * Initializes the Enigma simulation once the top view image is loaded.
+ */
 function Enigma() {
   let enigmaImage = GImage("EnigmaTopView.png");
   enigmaImage.addEventListener("load", function () {
@@ -77,6 +80,9 @@ function runEnigmaSimulation(gw) {
 
 /* Graphics */
 
+/**
+ * Represents either the keyboard or the lamp panel overlay.
+ */
 class Keyboard {
   constructor(enigma, gw, clickable) {
     this.enigma = enigma;
@@ -108,6 +114,9 @@ class Keyboard {
     this.keys = keys;
   }
 
+  /**
+   * Creates a single key compound with the specified styling.
+   */
   createKey(
     letter,
     x,
@@ -154,6 +163,9 @@ class Keyboard {
     return compound;
   }
 
+  /**
+   * Flips a keyboard key between its up and down colors.
+   */
   toggleKeyColor(key) {
     this.gw.remove(key.element);
     const newColor =
@@ -172,6 +184,9 @@ class Keyboard {
     this.gw.add(newKeyElement);
   }
 
+  /**
+   * Flips a lamp between off and on colors.
+   */
   toggleLampColor(key) {
     const lamp = this.enigma.lamps[key.index];
     this.gw.remove(lamp.element);
@@ -197,6 +212,9 @@ class Keyboard {
     this.gw.add(newLampElement);
   }
 
+  /**
+   * Maps a pressed key to the lamp that should light up via permutations.
+   */
   permuteKeytoLamp(key) {
     const letter = key.letter;
     const idx = ALPHABET.indexOf(letter);
@@ -210,6 +228,9 @@ class Keyboard {
   }
 }
 
+/**
+ * Displays and advances the rotor stack above the machine.
+ */
 class RotorPanel {
   constructor(enigma, gw) {
     this.enigma = enigma;
@@ -234,6 +255,9 @@ class RotorPanel {
     this.enigma.rotorLetters = letters;
   }
 
+  /**
+   * Creates the compound graphics for a single rotor slot.
+   */
   createRotor(letter, x, y) {
     const compound = GCompound(x, y);
     const rect = GRect(
@@ -253,6 +277,9 @@ class RotorPanel {
     return compound;
   }
 
+  /**
+   * Advances a rotor by one position, cascading carry to slower rotors.
+   */
   advanceRotor(rotor) {
     const idx = rotor.index;
     const currentLetter = rotor.letter;
@@ -281,6 +308,9 @@ class RotorPanel {
 
 /* Event Forwarder */
 
+/**
+ * Forwards mouse interactions from the window to keys, lamps, and rotors.
+ */
 class EventForwarder {
   constructor(enigma, gw, keyboard, lampPanel, rotorPanel) {
     this.enigma = enigma;
@@ -293,6 +323,9 @@ class EventForwarder {
     this.gw.addEventListener("mouseup", this.handleUp);
   }
 
+  /**
+   * Handles mouse press events, toggling keys, lamps, and rotors.
+   */
   handleDown = (e) => {
     const obj = this.gw.getElementAt(e.getX(), e.getY());
     for (const key of this.enigma.keys) {
@@ -310,6 +343,9 @@ class EventForwarder {
     }
   };
 
+  /**
+   * Handles mouse release events to reset keys and lamps.
+   */
   handleUp = (e) => {
     const obj = this.gw.getElementAt(e.getX(), e.getY());
     for (const key of this.enigma.keys) {
@@ -323,7 +359,9 @@ class EventForwarder {
 
 /* String ops & encryption */
 
-// Applies a permutation to an index with an offset.
+/**
+ * Applies an alphabet permutation to a letter index with the rotor offset.
+ */
 function applyPermutation(index, permutation, offset) {
   const shifted = (index + offset) % 26;
   const wiredChar = permutation.charAt(shifted);
@@ -331,7 +369,9 @@ function applyPermutation(index, permutation, offset) {
   return (wiredIndex - offset + 26) % 26;
 }
 
-// Inverts the order of characters in the given key string, returning the reversed string.
+/**
+ * Produces the inverse wiring for a permutation string.
+ */
 function invertKey(key) {
   let inverted = "";
   for (let i = 0; i < key.length; i++) {
@@ -341,7 +381,9 @@ function invertKey(key) {
   return inverted;
 }
 
-// Builds the permuation array from ROTOR_PERMUTATIONS and REFLECTOR_PERMUTATION
+/**
+ * Combines rotor, reflector, and inverse rotor permutations into one list.
+ */
 function buildPermutations() {
   const reversedRotorPermuations = [...ROTOR_PERMUTATIONS].reverse();
   const permutations = [...reversedRotorPermuations, REFLECTOR_PERMUTATION];
@@ -349,7 +391,9 @@ function buildPermutations() {
   return permutations;
 }
 
-// Builds the offset array from rotorLetters string based on the fast -> slow -> reflector -> slow -> fast order
+/**
+ * Generates the offset sequence for forward and reflected rotor traversal.
+ */
 function buildOffsets(rotorLetters) {
   const offsets = [];
   const letters = [...rotorLetters].reverse(); // fast -> slow
