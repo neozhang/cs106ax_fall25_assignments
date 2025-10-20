@@ -46,14 +46,15 @@ const LAMP_STYLE = {
   locations: LAMP_LOCATIONS,
 };
 
+const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
 function runEnigmaSimulation(gw) {
-  let enigma = {
-    ALPHABET: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-    PERMUTATIONS: ROTOR_PERMUTATIONS,
+  const enigma = {
+    permutations: buildPermutations(),
     keys: [],
     lamps: [],
     rotors: [],
-    inputLetters: "",
+    rotorLetters: [],
   };
 
   // initialize the graphcis
@@ -82,20 +83,19 @@ class Keyboard {
     this.gw = gw;
     this.clickable = clickable;
     this.style = clickable ? KEY_STYLE : LAMP_STYLE;
-    const letters = enigma.ALPHABET;
-    this.letters = letters;
+    this.letters = ALPHABET;
     let keys = [];
-    for (let i = 0; i < letters.length; i++) {
+    for (let i = 0; i < this.letters.length; i++) {
       let key = {
         index: i,
-        letter: letters[i],
+        letter: this.letters[i],
         color: this.style.colorMap[0],
         position: [
           this.style.locations[i]["x"] - this.style.radius,
           this.style.locations[i]["y"] - this.style.radius,
         ],
         element: this.createKey(
-          letters[i],
+          this.letters[i],
           this.style.locations[i]["x"] - this.style.radius,
           this.style.locations[i]["y"] - this.style.radius,
           this.style.colorMap[0],
@@ -196,6 +196,18 @@ class Keyboard {
     this.enigma.lamps[key.index] = lamp;
     this.gw.add(newLampElement);
   }
+
+  permuteKeytoLamp(key) {
+    const letter = key.letter;
+    const idx = ALPHABET.indexOf(letter);
+    let permutedIdx = idx;
+    const offsets = buildOffsets(this.enigma.rotorLetters);
+    for (let i = 0; i < this.enigma.permutations.length; i++) {
+      let permuation = this.enigma.permutations[i];
+      permutedIdx = applyPermutation(permutedIdx, permuation, offsets[i]);
+    }
+    return this.enigma.lamps[permutedIdx];
+  }
 }
 
 class RotorPanel {
@@ -203,13 +215,14 @@ class RotorPanel {
     this.enigma = enigma;
     this.gw = gw;
     let rotors = [];
-    for (let i = 0; i < this.enigma.PERMUTATIONS.length; i++) {
+    let letters = ["A", "A", "A"];
+    for (let i = 0; i < ROTOR_PERMUTATIONS.length; i++) {
       let rotor = {
         index: i,
-        letter: this.enigma.ALPHABET[0],
+        letter: ALPHABET[0],
         position: [ROTOR_LOCATIONS[i]["x"], ROTOR_LOCATIONS[i]["y"]],
         element: this.createRotor(
-          this.enigma.ALPHABET[0],
+          ALPHABET[0],
           ROTOR_LOCATIONS[i]["x"],
           ROTOR_LOCATIONS[i]["y"],
         ),
@@ -218,6 +231,7 @@ class RotorPanel {
       this.gw.add(rotor.element);
     }
     this.rotors = rotors;
+    this.enigma.rotorLetters = letters;
   }
 
   createRotor(letter, x, y) {
@@ -259,6 +273,7 @@ class RotorPanel {
       element: newRotor,
     };
     this.gw.add(newRotor);
+    this.enigma.rotorLetters[idx] = nextLetter;
   }
 }
 
@@ -276,26 +291,28 @@ class EventForwarder {
     this.gw.addEventListener("mouseup", this.handleUp);
   }
 
-  handleUp = (e) => {
-    const obj = this.gw.getElementAt(e.getX(), e.getY());
-    for (const key of this.enigma.keys) {
-      if (key.element === obj) {
-        this.keyboard.toggleKeyColor(key);
-        this.lampPanel.toggleLampColor(key);
-      }
-    }
-  };
-
   handleDown = (e) => {
     const obj = this.gw.getElementAt(e.getX(), e.getY());
     for (const key of this.enigma.keys) {
       if (key.element === obj) {
-        this.keyboard.toggleKeyColor(key);
-        this.lampPanel.toggleLampColor(key);
+        this.key = key;
+        this.keyboard.toggleKeyColor(this.key);
+        this.lamp = this.keyboard.permuteKeytoLamp(key);
+        this.lampPanel.toggleLampColor(this.lamp);
       }
     }
     for (const rotor of this.enigma.rotors) {
       if (rotor.element === obj) this.rotorPanel.advanceRotor(rotor);
+    }
+  };
+
+  handleUp = (e) => {
+    const obj = this.gw.getElementAt(e.getX(), e.getY());
+    for (const key of this.enigma.keys) {
+      if (key.element === obj) {
+        this.keyboard.toggleKeyColor(this.key);
+        this.lampPanel.toggleLampColor(this.lamp);
+      }
     }
   };
 }
@@ -304,17 +321,37 @@ class EventForwarder {
 
 // Applies a permutation to an index with an offset.
 function applyPermutation(index, permutation, offset) {
-  let shiftedIndex = (index + offset + 26) % 26;
-  let permutedChar = permutation.charAt(shiftedIndex);
-  return permutedChar.charCodeAt(0) - offset;
+  const shifted = (index + offset) % 26;
+  const wiredChar = permutation.charAt(shifted);
+  const wiredIndex = wiredChar.charCodeAt(0) - "A".charCodeAt(0);
+  return (wiredIndex - offset + 26) % 26;
 }
 
 // Inverts the order of characters in the given key string, returning the reversed string.
 function invertKey(key) {
-  let inverted = [];
-  for (let i = 0; i <= key.length; i++) {
-    let ch = key.charAt(key.length - i);
-    inverted.push(ch);
+  let inverted = "";
+  for (let i = 0; i < key.length; i++) {
+    let ch = ALPHABET.charAt(key.indexOf(ALPHABET.charAt(i)));
+    inverted += ch;
   }
-  return inverted.join("");
+  return inverted;
+}
+
+// Builds the permuation array from ROTOR_PERMUTATIONS and REFLECTOR_PERMUTATION
+function buildPermutations() {
+  const reversedRotorPermuations = [...ROTOR_PERMUTATIONS].reverse();
+  const permutations = [...reversedRotorPermuations, REFLECTOR_PERMUTATION];
+  for (const key of ROTOR_PERMUTATIONS) permutations.push(invertKey(key));
+  return permutations;
+}
+
+// Builds the offset array from rotorLetters string based on the fast -> slow -> reflector -> slow -> fast order
+function buildOffsets(rotorLetters) {
+  const offsets = [];
+  const letters = [...rotorLetters].reverse(); // fast -> slow
+  letters.push("A", ...rotorLetters); // reflector doesn't return so use "A"
+  for (const letter of letters) {
+    offsets.push(letter.charCodeAt(0) - "A".charCodeAt(0));
+  }
+  return offsets;
 }
