@@ -297,12 +297,12 @@ class EventForwarder {
     const obj = this.gw.getElementAt(e.getX(), e.getY());
     for (const key of this.enigma.keys) {
       if (key.element === obj) {
+        const fastRotor = this.enigma.rotors[2];
+        this.rotorPanel.advanceRotor(fastRotor); // advance the fast rotor
         this.key = key;
         this.keyboard.toggleKeyColor(this.key);
         this.lamp = this.keyboard.permuteKeytoLamp(key);
         this.lampPanel.toggleLampColor(this.lamp);
-        const fastRotor = this.enigma.rotors[2];
-        this.rotorPanel.advanceRotor(fastRotor); // advance the fast rotor
       }
     }
     for (const rotor of this.enigma.rotors) {
