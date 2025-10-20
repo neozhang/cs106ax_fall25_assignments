@@ -256,12 +256,14 @@ class RotorPanel {
   advanceRotor(rotor) {
     const idx = rotor.index;
     const currentLetter = rotor.letter;
-    const permutation = ROTOR_PERMUTATIONS[idx];
-    const currentPos = permutation.indexOf(currentLetter);
+    const currentPos = ALPHABET.indexOf(currentLetter);
     const nextLetter =
-      currentPos < permutation.length - 1
-        ? permutation.charAt(currentPos + 1)
-        : permutation.charAt(currentPos - permutation.length + 1);
+      currentPos < ALPHABET.length - 1
+        ? ALPHABET[currentPos + 1]
+        : ALPHABET[currentPos - ALPHABET.length + 1];
+    if (nextLetter === "A" && idx !== 0) {
+      this.advanceRotor(this.enigma.rotors[idx - 1]); // carry to the next rotor
+    }
     const x = rotor.position[0];
     const y = rotor.position[1];
     this.gw.remove(this.rotors[idx].element);
@@ -299,6 +301,8 @@ class EventForwarder {
         this.keyboard.toggleKeyColor(this.key);
         this.lamp = this.keyboard.permuteKeytoLamp(key);
         this.lampPanel.toggleLampColor(this.lamp);
+        const fastRotor = this.enigma.rotors[2];
+        this.rotorPanel.advanceRotor(fastRotor); // advance the fast rotor
       }
     }
     for (const rotor of this.enigma.rotors) {
