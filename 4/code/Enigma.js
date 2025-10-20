@@ -92,18 +92,16 @@ class Keyboard {
     this.letters = ALPHABET;
     let keys = [];
     for (let i = 0; i < this.letters.length; i++) {
+      const { x, y } = this.style.locations[i];
       let key = {
         index: i,
         letter: this.letters[i],
         color: this.style.colorMap[0],
-        position: [
-          this.style.locations[i]["x"] - this.style.radius,
-          this.style.locations[i]["y"] - this.style.radius,
-        ],
+        position: [x - this.style.radius, y - this.style.radius],
         element: this.createKey(
           this.letters[i],
-          this.style.locations[i]["x"] - this.style.radius,
-          this.style.locations[i]["y"] - this.style.radius,
+          x - this.style.radius,
+          y - this.style.radius,
           this.style.colorMap[0],
         ),
       };
@@ -117,26 +115,14 @@ class Keyboard {
   /**
    * Creates a single key compound with the specified styling.
    */
-  createKey(
-    letter,
-    x,
-    y,
-    keyColor,
-    radius,
-    border,
-    borderColor,
-    bgColor,
-    labelDy,
-    font,
-  ) {
+  createKey(letter, x, y, overrideColor) {
+    const { radius, border, borderColor, bgColor, labelDy, font } = this.style;
+
     const compound = GCompound(x, y);
 
-    radius = radius ? radius : this.style.radius;
-    border = border ? border : this.style.border;
-    borderColor = borderColor ? borderColor : this.style.borderColor;
-    bgColor = bgColor ? bgColor : this.style.bgColor;
-    labelDy = labelDy ? labelDy : this.style.labelDy;
-    font = font ? font : this.style.font;
+    const outerOval = GOval(radius * 2, radius * 2);
+    outerOval.setFilled(true);
+    outerOval.setColor(borderColor);
 
     const innerOval = GOval(
       border,
@@ -144,21 +130,23 @@ class Keyboard {
       (radius - border) * 2,
       (radius - border) * 2,
     );
-    const outerOval = GOval(radius * 2, radius * 2);
     innerOval.setFilled(true);
     innerOval.setColor(bgColor);
-    outerOval.setFilled(true);
-    outerOval.setColor(borderColor);
 
-    letter = letter.charAt(0).toUpperCase();
-    const label = GLabel(letter, radius, radius + labelDy);
+    const label = GLabel(
+      letter.charAt(0).toUpperCase(),
+      radius,
+      radius + labelDy,
+    );
     label.setFont(font);
-    label.setColor(keyColor);
+    label.setColor(overrideColor ?? this.style.colorMap[0]);
     label.setTextAlign("center");
 
     compound.add(outerOval);
     compound.add(innerOval);
     compound.add(label);
+
+    compound.label = label;
 
     return compound;
   }
@@ -167,49 +155,10 @@ class Keyboard {
    * Flips a keyboard key between its up and down colors.
    */
   toggleKeyColor(key) {
-    this.gw.remove(key.element);
-    const newColor =
-      this.keys[key.index].color === this.style.colorMap[0]
-        ? this.style.colorMap[1]
-        : this.style.colorMap[0];
-    const newKeyElement = this.createKey(
-      key.letter,
-      key.position[0],
-      key.position[1],
-      newColor,
-    );
-    key.element = newKeyElement;
-    key.color = newColor;
-    this.keys[key.index] = key;
-    this.gw.add(newKeyElement);
-  }
-
-  /**
-   * Flips a lamp between off and on colors.
-   */
-  toggleLampColor(key) {
-    const lamp = this.enigma.lamps[key.index];
-    this.gw.remove(lamp.element);
-    const newColor =
-      lamp.color === LAMP_STYLE.colorMap[0]
-        ? LAMP_STYLE.colorMap[1]
-        : LAMP_STYLE.colorMap[0];
-    const newLampElement = this.createKey(
-      lamp.letter,
-      lamp.position[0],
-      lamp.position[1],
-      newColor,
-      LAMP_STYLE.radius,
-      LAMP_STYLE.border,
-      LAMP_STYLE.borderColor,
-      LAMP_STYLE.bgColor,
-      LAMP_STYLE.labelDy,
-      LAMP_STYLE.font,
-    );
-    lamp.element = newLampElement;
-    lamp.color = newColor;
-    this.enigma.lamps[key.index] = lamp;
-    this.gw.add(newLampElement);
+    const [upColor, downColor] = this.style.colorMap;
+    const nextColor = key.color === upColor ? downColor : upColor;
+    key.color = nextColor;
+    key.element.label.setColor(nextColor);
   }
 
   /**
@@ -274,6 +223,7 @@ class RotorPanel {
     label.setTextAlign("center");
     compound.add(rect);
     compound.add(label);
+    compound.label = label;
     return compound;
   }
 
@@ -281,28 +231,14 @@ class RotorPanel {
    * Advances a rotor by one position, cascading carry to slower rotors.
    */
   advanceRotor(rotor) {
-    const idx = rotor.index;
-    const currentLetter = rotor.letter;
-    const currentPos = ALPHABET.indexOf(currentLetter);
-    const nextLetter =
-      currentPos < ALPHABET.length - 1
-        ? ALPHABET[currentPos + 1]
-        : ALPHABET[currentPos - ALPHABET.length + 1];
-    if (nextLetter === "A" && idx !== 0) {
-      this.advanceRotor(this.enigma.rotors[idx - 1]); // carry to the next rotor
+    const next =
+      ALPHABET[(ALPHABET.indexOf(rotor.letter) + 1) % ALPHABET.length];
+    if (next === "A" && rotor.index !== 0) {
+      this.advanceRotor(this.enigma.rotors[rotor.index - 1]);
     }
-    const x = rotor.position[0];
-    const y = rotor.position[1];
-    this.gw.remove(this.rotors[idx].element);
-    const newRotor = this.createRotor(nextLetter, x, y);
-    this.enigma.rotors[idx] = {
-      index: idx,
-      letter: nextLetter,
-      position: [x, y],
-      element: newRotor,
-    };
-    this.gw.add(newRotor);
-    this.enigma.rotorLetters[idx] = nextLetter;
+    rotor.letter = next;
+    rotor.element.label.setLabel(next);
+    this.enigma.rotorLetters[rotor.index] = next;
   }
 }
 
@@ -335,11 +271,15 @@ class EventForwarder {
         this.key = key;
         this.keyboard.toggleKeyColor(this.key);
         this.lamp = this.keyboard.permuteKeytoLamp(key);
-        this.lampPanel.toggleLampColor(this.lamp);
+        this.lampPanel.toggleKeyColor(this.lamp);
+        break;
       }
     }
     for (const rotor of this.enigma.rotors) {
-      if (rotor.element === obj) this.rotorPanel.advanceRotor(rotor);
+      if (rotor.element === obj) {
+        this.rotorPanel.advanceRotor(rotor);
+        break;
+      }
     }
   };
 
@@ -352,7 +292,8 @@ class EventForwarder {
     for (const key of this.enigma.keys) {
       if (key.element === obj) {
         this.keyboard.toggleKeyColor(this.key);
-        this.lampPanel.toggleLampColor(this.lamp);
+        this.lampPanel.toggleKeyColor(this.lamp);
+        break;
       }
     }
   };
