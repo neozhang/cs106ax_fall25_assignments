@@ -57,12 +57,13 @@ def isInteger(line):
 
 
 def generateRandomSentence(grammar):
-    startNonterms = grammar["<start>"][0].split()
-    # deal with the punctuation in the start nonterminal
-    startNonterms[-1] = startNonterms[-1][0 : len(startNonterms[-1]) - 1]
+    startProduction = tokenizeStart(grammar)
     sentence = ""
-    for nonterm in startNonterms:
-        sentence += parseProduction(choice(grammar[nonterm]), grammar)
+    for token in startProduction:
+        if token and isNonterminal(token):
+            sentence += parseProduction(choice(grammar[token]), grammar)
+        else:
+            sentence += token + " "
     return sentence.strip() + "."
 
 
@@ -77,9 +78,18 @@ def parseProduction(production, grammar):
     return partials
 
 
+def tokenizeStart(grammar):
+    startProduction = grammar["<start>"][0].split()
+    # deal with the punctuation in the start nonterminal
+    startProduction[-1] = startProduction[-1][0 : len(startProduction[-1]) - 1]
+    return startProduction
+
+
 def GenerateRandomSentences():
     filename = chooseInputFile("grammars")
     grammar = readGrammar(filename)
+    print(grammar)
+    print("_____________")
     for i in range(3):
         print(generateRandomSentence(grammar))
 
