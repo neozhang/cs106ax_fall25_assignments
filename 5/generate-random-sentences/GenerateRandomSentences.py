@@ -13,21 +13,24 @@ def readGrammar(filename):
         result = {}
         nonterm = ""
         productions = []
+        curr = 0
+        num_of_productions = 0
         for line in lines:
             line = line.strip()
-            if line and isNonterminal(line):
+            if line and num_of_productions == 0 and isNonterminal(line):
                 nonterm = line
                 continue
             elif isInteger(line):
-                length_of_productions = int(line)
+                num_of_productions = int(line)
                 curr = 0
                 productions = []
                 continue
-            elif curr < length_of_productions:
+            elif curr < num_of_productions:
                 productions.append(line)
                 curr += 1
                 continue
             result[nonterm] = productions
+            num_of_productions = 0
     return result
 
 
