@@ -59,19 +59,20 @@ def isInteger(line):
         return False
 
 
+def isPunctuation(token):
+    return token in [".", "?", "!", ",", ":", ";"]
+
+
 def generateRandomSentence(grammar):
-    startProduction = tokenizeStart(grammar)
-    sentence = ""
-    for token in startProduction:
-        if token and isNonterminal(token):
-            sentence += parseProduction(choice(grammar[token]), grammar)
-        else:
-            sentence += token + " "
-    return sentence.strip() + "."
+    for k, v in grammar.items():
+        if k == "<start>":
+            sentence = parseProduction(v[0], grammar)
+            return sentence
+    return ""
 
 
 def parseProduction(production, grammar):
-    tokens = production.split()
+    tokens = tokenizeProduction(production)
     partials = ""
     for token in tokens:
         if token and isNonterminal(token):
@@ -81,18 +82,22 @@ def parseProduction(production, grammar):
     return partials
 
 
-def tokenizeStart(grammar):
-    startProduction = grammar["<start>"][0].split()
-    # deal with the punctuation in the start nonterminal
-    startProduction[-1] = startProduction[-1][0 : len(startProduction[-1]) - 1]
-    return startProduction
+def tokenizeProduction(production):
+    # need to add whitespace around nonterminals before splitting
+    # to deal with the punctuation issues
+    for ch in production:
+        if ch == "<":
+            production = production.replace(ch, " <")
+        elif ch == ">":
+            production = production.replace(ch, "> ")
+    return production.split()
 
 
 def GenerateRandomSentences():
     filename = chooseInputFile("grammars")
     grammar = readGrammar(filename)
-    print(grammar)
-    print("_____________")
+    # print(grammar)
+    # print("_____________")
     for i in range(3):
         print(generateRandomSentence(grammar))
 
