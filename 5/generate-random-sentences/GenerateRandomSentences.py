@@ -3,8 +3,11 @@
 # This file exports a program that reads in a grammar file and
 # then prints three randomly generated sentences
 
+from string import punctuation
 from filechooser import chooseInputFile
 from random import choice
+
+globals = {"punctuation": [".", "?", "!", ",", ":", ";"]}
 
 
 def readGrammar(filename):
@@ -60,14 +63,14 @@ def isInteger(line):
 
 
 def isPunctuation(token):
-    return token in [".", "?", "!", ",", ":", ";"]
+    return token in globals["punctuation"]
 
 
 def generateRandomSentence(grammar):
     for k, v in grammar.items():
         if k == "<start>":
             sentence = parseProduction(v[0], grammar)
-            return sentence
+            return removeSpaceBeforePunctuation(sentence)
     return ""
 
 
@@ -91,6 +94,12 @@ def tokenizeProduction(production):
         elif ch == ">":
             production = production.replace(ch, "> ")
     return production.split()
+
+
+def removeSpaceBeforePunctuation(sentence):
+    for p in globals["punctuation"]:
+        sentence = sentence.replace(" " + p, p)
+    return sentence
 
 
 def GenerateRandomSentences():
