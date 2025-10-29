@@ -3,13 +3,17 @@
 # This file exports a program that reads in a grammar file and
 # then prints three randomly generated sentences
 
-from string import punctuation
 from filechooser import chooseInputFile
 from random import choice
 
 globals = {"punctuation": [".", "?", "!", ",", ":", ";"]}
 
+# FUNCTION DEFINITIONS
+# --------------------
 
+
+# readGrammar(filename)
+# Reads grammar rules from a file and returns it as a dictionary.
 def readGrammar(filename):
     with open(filename) as file:
         lines = file.read().splitlines()
@@ -37,6 +41,44 @@ def readGrammar(filename):
     return result
 
 
+# generateRandomSentence(grammar)
+# Generate a random sentence using the given grammar dictionary.
+def generateRandomSentence(grammar):
+    for k, v in grammar.items():
+        if k == "<start>":
+            sentence = parseProduction(v[0], grammar)
+            return removeSpaceBeforePunctuation(sentence)
+    return ""
+
+
+# parseProduction(grammar, production)
+# Parse a production string and generate a sentence using the given grammar dictionary recursively.
+def parseProduction(production, grammar):
+    tokens = tokenizeProduction(production)
+    partials = ""
+    for token in tokens:
+        if token and isNonterminal(token):
+            partials += parseProduction(choice(grammar[token]), grammar)
+        else:
+            partials += token + " "
+    return partials
+
+
+# GenerateRandomSentences()
+# Read grammar and write sentences
+def GenerateRandomSentences():
+    filename = chooseInputFile("grammars")
+    grammar = readGrammar(filename)
+    for i in range(3):
+        print(generateRandomSentence(grammar))
+
+
+# HELPERS
+# -------
+
+
+# Helper: getNonterminalIndex(line)
+# Returns a list of tuples representing the start and end indices of nonterminal symbols in the given line.
 def getNonterminalIndex(line):
     result = []
     while line:
@@ -50,10 +92,14 @@ def getNonterminalIndex(line):
     return result
 
 
+# Helper: isNonterminal(line)
+# Returns True if the given line is a nonterminal symbol, False otherwise.
 def isNonterminal(line):
     return line[0] == "<" and len(getNonterminalIndex(line)) == 1
 
 
+# Helper: isInteger(line)
+# Returns True if the given line is an integer, False otherwise.
 def isInteger(line):
     try:
         int(line)
@@ -62,29 +108,14 @@ def isInteger(line):
         return False
 
 
+# Helper: isPunctuation(token)
+# Returns True if the given token is a punctuation symbol, False otherwise.
 def isPunctuation(token):
     return token in globals["punctuation"]
 
 
-def generateRandomSentence(grammar):
-    for k, v in grammar.items():
-        if k == "<start>":
-            sentence = parseProduction(v[0], grammar)
-            return removeSpaceBeforePunctuation(sentence)
-    return ""
-
-
-def parseProduction(production, grammar):
-    tokens = tokenizeProduction(production)
-    partials = ""
-    for token in tokens:
-        if token and isNonterminal(token):
-            partials += parseProduction(choice(grammar[token]), grammar)
-        else:
-            partials += token + " "
-    return partials
-
-
+# Helper: tokenizeProduction(production)
+# Tokenizes the given production string into a list of tokens.
 def tokenizeProduction(production):
     # need to add whitespace around nonterminals before splitting
     # to deal with the punctuation issues
@@ -96,20 +127,15 @@ def tokenizeProduction(production):
     return production.split()
 
 
+# Helper: removeSpaceBeforePunctuation(sentence)
+# Removes any space before punctuation symbols in the given sentence.
 def removeSpaceBeforePunctuation(sentence):
     for p in globals["punctuation"]:
         sentence = sentence.replace(" " + p, p)
     return sentence
 
 
-def GenerateRandomSentences():
-    filename = chooseInputFile("grammars")
-    grammar = readGrammar(filename)
-    # print(grammar)
-    # print("_____________")
-    for i in range(3):
-        print(generateRandomSentence(grammar))
-
+# STARTUP
 
 if __name__ == "__main__":
     GenerateRandomSentences()
