@@ -24,18 +24,23 @@ def readGrammar(filename):
         num_of_productions = 0
         for line in lines:
             line = line.strip()
-            if line and num_of_productions == 0 and isNonterminal(line):
-                nonterm = line
-                continue
-            elif isInteger(line):
-                num_of_productions = int(line)
-                curr = 0
-                productions = []
-                continue
+            if line and num_of_productions == 0:
+                # initialize when line exists and we haven't reached the productions yet
+                if isNonterminal(line):
+                    nonterm = line
+                    continue
+                elif isInteger(line):
+                    num_of_productions = int(line)
+                    productions = []
+                    continue
             elif curr < num_of_productions:
+                # otherwise we enter this sub-loop
                 productions.append(line)
                 curr += 1
                 continue
+            elif curr == num_of_productions:
+                # until we finish all productions, reset curr
+                curr = 0
             result[nonterm] = productions
             num_of_productions = 0
     return result
@@ -69,6 +74,7 @@ def parseProduction(production, grammar):
 def GenerateRandomSentences():
     filename = chooseInputFile("grammars")
     grammar = readGrammar(filename)
+    print(grammar)
     for i in range(3):
         print(generateRandomSentence(grammar))
 
