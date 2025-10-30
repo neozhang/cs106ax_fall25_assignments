@@ -74,7 +74,6 @@ def parseProduction(production, grammar):
 def GenerateRandomSentences():
     filename = chooseInputFile("grammars")
     grammar = readGrammar(filename)
-    print(grammar)
     for i in range(3):
         print(generateRandomSentence(grammar))
 
@@ -123,14 +122,23 @@ def isPunctuation(token):
 # Helper: tokenizeProduction(production)
 # Tokenizes the given production string into a list of tokens.
 def tokenizeProduction(production):
-    # need to add whitespace around nonterminals before splitting
-    # to deal with the punctuation issues
-    for ch in production:
-        if ch == "<":
-            production = production.replace(ch, " <")
-        elif ch == ">":
-            production = production.replace(ch, "> ")
-    return production.split()
+    tokens = []
+    lpos, rpos = 0, 0
+    remains = production
+    while True:
+        try:
+            lpos = remains.index("<")
+            rpos = remains.index(">")
+            if lpos > rpos:
+                break
+            if lpos != 0:
+                tokens.extend(remains[:lpos].split())
+            tokens.append(remains[lpos : rpos + 1])
+            remains = remains[rpos + 1 :].strip()
+        except ValueError:
+            break
+    tokens.extend(remains.split())
+    return tokens
 
 
 # Helper: removeSpaceBeforePunctuation(sentence)
