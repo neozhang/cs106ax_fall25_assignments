@@ -4,91 +4,123 @@
 # of text fragments from a file you choose, and then reconstructs
 # the original text so it can be printed out.
 
-from typing import List
 from filechooser import chooseInputFile
 
 
+# Reads a file containing text fragments enclosed in curly braces {}
+# and returns them as a list of strings.
 def extractFragments(filename):
     with open(filename) as file:
         lines = file.readlines()
         tokens = []
+        partial = ""
         for line in lines:
-            tokens.extend(tokenizeStr(line, "{", "}"))
+            tokenized = tokenizeStr(partial + line, "{", "}")
+            tokens.extend(tokenized["fragments"])  # save the complete fragments
+            partial = tokenized["partial"]  # this will be merged into the next line
     return tokens
 
 
-def tokenizeStr(str, startSym, endSym):
-    tokens = []
+# Scans a string to find and extract substrings delimited by start and end symbols.
+# Returns a dict where the "fragments" key stores the complete fragments,
+# and the "partial" key stores the incomplete ones.
+def tokenizeStr(s, startSym, endSym):
+    tokens = {"fragments": [], "partial": ""}
     lpos, rpos = 0, 0
-    remains = str.strip()
-    while True:
+    pos = 0
+    while pos < len(s):
         try:
-            lpos = remains.index(startSym)
-            rpos = remains.index(endSym)
-            if lpos > rpos:
+            lpos = s.index(startSym, pos)
+            rpos = s.index(endSym, pos)
+            if lpos > rpos:  # deal with an edge case
+                s = s[pos:]
                 break
-            tokens.append(remains[lpos + 1 : rpos])
-            remains = remains[rpos + 1 :]
+            fragment = s[lpos + len(startSym) : rpos]
+            tokens["fragments"].append(fragment)  # add the complete fragment
+            s = s[rpos + 1 :]
         except ValueError:
+            tokens["partial"] = s  # add the incomplete fragment (partial)
             break
-    tokens.extend(remains)
-    # print(tokens)
     return tokens
 
 
+# Reconstructs a single string from a list of fragments using a greedy algorithm.
+# It repeatedly finds the pair of fragments with the largest overlap, merges them,
+# and continues until only one fragment remains.
 def reconstruct(fragments):
-    str1, str2, longestMatch = "", "", ["", 0, 0]
-    for i in range(len(fragments) - 1):
-        for j in range(i + 1, len(fragments)):
-            thisMatch = [greedyMatch(fragments[i], fragments[j]), i, j]
-            thatMatch = [greedyMatch(fragments[j], fragments[i]), j, i]
-            if len(thisMatch[0]) < len(thatMatch[0]):
-                thisMatch = thatMatch
-            if len(thisMatch[0]) > len(longestMatch[0]):
-                longestMatch = thisMatch
-                str1 = fragments[longestMatch[1]]
-                str2 = fragments[longestMatch[2]]
-    superStr = createSuperstring(str1, str2, longestMatch[0])
-    fragments.remove(str1)
-    fragments.remove(str2)
-    fragments.append(superStr)
-    if len(fragments) > 1:
-        reconstruct(fragments)
-    return fragments
+    while len(fragments) > 1:
+        best_overlap_len = -1
+        best_merged_str = ""
+        best_pair_indices = [-1, -1]
 
+        # Find the best overlapping pair in this iteration
+        for i in range(len(fragments)):
+            for j in range(i + 1, len(fragments)):
+                merged_str, overlap_str = greedyMatch(fragments[i], fragments[j])
+                if len(overlap_str) > best_overlap_len:
+                    best_overlap_len = len(overlap_str)
+                    best_merged_str = merged_str
+                    best_pair_indices = [i, j]
 
-def greedyMatch(str1, str2) -> str:
-    while True:
-        if str1.find(str2) == -1:
-            str2 = str2[0:-1]
-            continue
+        # If no overlap was found, merge the first two fragments
+        if best_pair_indices == [-1, -1]:
+            pair = fragments[:2]
+            merged = pair[0] + pair[1]
+            fragments.pop(0)
+            fragments.pop(0)
+            fragments.append(merged)
         else:
-            break
-    return str2
+            # Otherwise, remove the best pair and add their merged version
+            # Important to remove the fragment with the larger index first
+            fragments.pop(max(best_pair_indices))
+            fragments.pop(min(best_pair_indices))
+            fragments.append(best_merged_str)
+
+    return fragments[0] if fragments else ""
 
 
-def createSuperstring(str1, str2, match):
-    return str1 + str2[len(match) :]
+# Finds the best overlap between two strings and merges them.
+# Returns the merged string and the overlapping segment.
+def greedyMatch(s1, s2):
+    # Case 1: One string is completely contained in the other
+    if s1 in s2:
+        return [s2, s1]
+    if s2 in s1:
+        return [s1, s2]
+
+    best_overlap = ""
+    merged_string = s1 + s2  # Default if no overlap
+
+    # Case 2: Suffix of s1 matches prefix of s2
+    for i in range(s2, 0, -1):
+        if s1.endswith(s2[:i]):
+            if len(s2[:i]) > len(best_overlap):
+                best_overlap = s2[:i]
+                merged_string = s1 + s2[i:]
+            break  # Found the longest possible for this case
+
+    # Case 3: Suffix of s2 matches prefix of s1
+    for i in range(s1, 0, -1):
+        if s2.endswith(s1[:i]):
+            if len(s1[:i]) > len(best_overlap):
+                best_overlap = s1[:i]
+                merged_string = s2 + s1[i:]
+            break  # Found the longest possible for this case
+
+    return [merged_string, best_overlap]
 
 
-def lazyMatch(str1, str2) -> str:
-    # assuming str1 is the longer string
-    match = ""
-    for i, ch in enumerate(str2):
-        if ch == str1[i]:
-            match += ch
-    return match
-
-
+# The main function that drives the reassembly process. It prompts the user
+# to choose a file, extracts fragments from it, reconstructs the original
+# text, and prints it to the console.
 def Reassemble():
     filename = chooseInputFile("reassemble-files")
     if filename == "":
         print("User canceled file selection. Quitting!")
         return
     fragments = extractFragments(filename)
-    print(fragments)
-    if fragments == None:
-        print("File didn't respect reassemble file format. Quitting!")
+    if not fragments:
+        print("File did not contain any fragments or was empty. Quitting!")
         return
     reconstruction = reconstruct(fragments)
     print(reconstruction)
@@ -96,8 +128,3 @@ def Reassemble():
 
 if __name__ == "__main__":
     Reassemble()
-    # print(greedyMatch("ell that en", "all is well"))
-    # print(createSuperstring("ell that en", "all is well"))
-
-    # [ell that en, hat end, hat en] -> ell that end
-    # [ell that end, t ends will, t end] -> ell that ends will
