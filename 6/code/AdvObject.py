@@ -12,20 +12,40 @@ This module defines a class that models an object in Adventure.
 # the ones defined in this starter file.                                  #
 ###########################################################################
 
-class AdvObject:
 
+class AdvObject:
     def __init__(self, name, description, location):
         """Creates an AdvObject from the specified properties."""
+        self._name = name
+        self._description = description
+        self._location = location
 
     def getName(self):
         """Returns the name of this object."""
+        return self._name
 
     def getDescription(self):
         """Returns the description of this object."""
+        return self._description
 
     def getInitialLocation(self):
         """Returns the initial location of this object."""
+        return self._location
 
     @staticmethod
     def readObject(f):
         """Reads and returns the next object from the file."""
+        line = f.readline().strip()
+        if line == "":
+            return None
+        name = line
+        while True:
+            line = f.readline().strip()
+            if line == "":
+                break
+            description = line
+            line = f.readline().strip()
+            if line == "":
+                break
+            location = line
+        return AdvObject(name, description, location)

@@ -5,6 +5,7 @@ This module defines the AdvGame class, which records the information
 necessary to play a game.
 """
 
+from AdvObject import AdvObject
 from AdvRoom import AdvRoom
 from tokenscanner import TokenScanner
 
@@ -50,6 +51,15 @@ class AdvGame:
                 if currentRoom is None:
                     break
                 self._rooms[currentRoom.getName()] = currentRoom
+        with open(f"{prefix}Objects.txt") as f:
+            while True:
+                currentObject = AdvObject.readObject(f)
+                if (
+                    currentObject is None
+                    or currentObject.getInitialLocation() == "PLAYER"
+                ):
+                    break
+                self._rooms[currentObject.getInitialLocation()].addObject(currentObject)
 
     def getRooms(self):
         """Returns the map of rooms"""
@@ -74,6 +84,9 @@ class AdvGame:
                     print(current.getShortDescription())
                 else:
                     print(current.getLongDescription())
+                    if len(current.getContents()) > 0:
+                        for obj in current.getContents():
+                            print(f"There is {obj.getDescription()} here.")
                     current.setVisited()
             text = input("> ").strip().upper()
             prompt.setInput(text, current)

@@ -27,6 +27,7 @@ class AdvRoom:
         self._longdesc = longdesc
         self._passages = passages
         self._visited = False
+        self._objects = []
 
     def getName(self):
         """Returns the name of this room.."""
@@ -50,6 +51,18 @@ class AdvRoom:
 
     def hasBeenVisited(self):
         return self._visited
+
+    def addObject(self, obj):
+        self._objects.append(obj)
+
+    def removeObject(self, obj):
+        self._objects.remove(obj)
+
+    def getContents(self):
+        return self._objects
+
+    def containsObject(self, obj):
+        return obj in self._objects
 
     @staticmethod
     def readRoom(f):
