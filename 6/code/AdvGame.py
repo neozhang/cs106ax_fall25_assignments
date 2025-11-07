@@ -6,6 +6,7 @@ necessary to play a game.
 """
 
 from AdvRoom import AdvRoom
+from tokenscanner import TokenScanner
 
 ###########################################################################
 # Your job in this assignment is to fill in the definitions of the        #
@@ -64,17 +65,83 @@ class AdvGame:
 
     def run(self):
         """Plays the adventure game stored in this object."""
-        verb = ""
         current = self.getFirstRoom()
-        while verb != "QUIT":
-            if current.hasBeenVisited():
-                print(current.getShortDescription())
-            else:
-                print(current.getLongDescription())
-                current.setVisited()
-            verb = input("> ").strip().upper()
-            next = self.getRoomByName(current.getNextRoom(verb))
+        prompt = Prompt("", current)
+
+        while prompt.getVerb() != "QUIT":
+            if not prompt.isBuiltin():
+                if current.hasBeenVisited():
+                    print(current.getShortDescription())
+                else:
+                    print(current.getLongDescription())
+                    current.setVisited()
+            text = input("> ").strip().upper()
+            prompt.setInput(text, current)
+            if prompt.execute():
+                continue
+            next = self.getRoomByName(current.getNextRoom(prompt.getVerb()))
             if next is None:
                 print("You can't go that way.")
             else:
                 current = next
+
+
+class Prompt:
+    def __init__(self, input, room):
+        self._builtins = {
+            "QUIT": self.handleQuit,
+            "HELP": self.handleHelp,
+            "INVENTORY": self.handleInventory,
+            "LOOK": self.handleLook,
+            "TAKE": self.handleTake,
+            "DROP": self.handleDrop,
+        }
+        self.setInput(input, room)
+
+    def getVerb(self):
+        return self._tokenized["verb"]
+
+    def getArg(self):
+        return self._tokenized["arg"]
+
+    def setInput(self, input, room):
+        self._raw = input
+        self._tokenized = {}
+        scanner = TokenScanner(input)
+        next = scanner.nextToken().strip().upper() if scanner.hasMoreTokens() else None
+        self._tokenized["verb"] = next
+        self._tokenized["obj"] = ""
+        while scanner.hasMoreTokens():
+            self._tokenized["obj"] += scanner.nextToken()
+        self._tokenized["room"] = room
+
+    def isBuiltin(self):
+        return self._tokenized["verb"] in self._builtins.keys()
+
+    def execute(self):
+        """Routes built-in commands to the right handlers; returns True if handled"""
+        verb = self.getVerb()
+        if verb in self._builtins.keys():
+            handler = self._builtins[verb]
+            # arg = self.getArg()
+            handler()
+            return True
+        return False
+
+    def handleQuit(self):
+        return
+
+    def handleHelp(self):
+        print("\n".join(HELP_TEXT))
+
+    def handleLook(self):
+        print(self._tokenized["room"].getLongDescription())
+
+    def handleInventory(self):
+        return
+
+    def handleTake(self):
+        return
+
+    def handleDrop(self):
+        return
