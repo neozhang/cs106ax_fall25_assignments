@@ -77,6 +77,7 @@ class AdvRoom:
             if line == MARKER:
                 break
             longdesc += line + "\n"
+        longdesc = longdesc.rstrip()
         passages = {}
         while True:
             line = f.readline().rstrip()

@@ -5,6 +5,8 @@ This module defines the AdvGame class, which records the information
 necessary to play a game.
 """
 
+from pickle import OBJ
+
 from AdvObject import AdvObject
 from AdvRoom import AdvRoom
 from tokenscanner import TokenScanner
@@ -45,6 +47,7 @@ class AdvGame:
     def __init__(self, prefix):
         """Reads the game data from files with the specified prefix."""
         self._rooms = {}  # {name: AdvRoom}
+        self._inventory = []
         with open(f"{prefix}Rooms.txt") as f:
             while True:
                 currentRoom = AdvRoom.readRoom(f)
@@ -54,12 +57,14 @@ class AdvGame:
         with open(f"{prefix}Objects.txt") as f:
             while True:
                 currentObject = AdvObject.readObject(f)
-                if (
-                    currentObject is None
-                    or currentObject.getInitialLocation() == "PLAYER"
-                ):
+                if currentObject is None:
                     break
-                self._rooms[currentObject.getInitialLocation()].addObject(currentObject)
+                if currentObject.getInitialLocation() == "PLAYER":
+                    self._inventory.append(currentObject)
+                else:
+                    self._rooms[currentObject.getInitialLocation()].addObject(
+                        currentObject
+                    )
 
     def getRooms(self):
         """Returns the map of rooms"""
@@ -76,7 +81,7 @@ class AdvGame:
     def run(self):
         """Plays the adventure game stored in this object."""
         current = self.getFirstRoom()
-        prompt = Prompt("", current)
+        prompt = Prompt("")
 
         while prompt.getVerb() != "QUIT":
             if not prompt.isBuiltin():
@@ -89,8 +94,8 @@ class AdvGame:
                             print(f"There is {obj.getDescription()} here.")
                     current.setVisited()
             text = input("> ").strip().upper()
-            prompt.setInput(text, current)
-            if prompt.execute():
+            prompt.setInput(text)
+            if prompt.execute(current, self._inventory):
                 continue
             next = self.getRoomByName(current.getNextRoom(prompt.getVerb()))
             if next is None:
@@ -100,7 +105,7 @@ class AdvGame:
 
 
 class Prompt:
-    def __init__(self, input, room):
+    def __init__(self, input):
         self._builtins = {
             "QUIT": self.handleQuit,
             "HELP": self.handleHelp,
@@ -109,15 +114,15 @@ class Prompt:
             "TAKE": self.handleTake,
             "DROP": self.handleDrop,
         }
-        self.setInput(input, room)
+        self.setInput(input)
 
     def getVerb(self):
         return self._tokenized["verb"]
 
-    def getArg(self):
-        return self._tokenized["arg"]
+    def getObj(self):
+        return self._tokenized["obj"]
 
-    def setInput(self, input, room):
+    def setInput(self, input):
         self._raw = input
         self._tokenized = {}
         scanner = TokenScanner(input)
@@ -125,36 +130,53 @@ class Prompt:
         self._tokenized["verb"] = next
         self._tokenized["obj"] = ""
         while scanner.hasMoreTokens():
-            self._tokenized["obj"] += scanner.nextToken()
-        self._tokenized["room"] = room
+            self._tokenized["obj"] += scanner.nextToken().strip().upper()
 
     def isBuiltin(self):
         return self._tokenized["verb"] in self._builtins.keys()
 
-    def execute(self):
+    def execute(self, room, inventory):
         """Routes built-in commands to the right handlers; returns True if handled"""
         verb = self.getVerb()
         if verb in self._builtins.keys():
             handler = self._builtins[verb]
-            # arg = self.getArg()
-            handler()
+            obj = self.getObj()
+            handler(obj, room, inventory)
             return True
         return False
 
-    def handleQuit(self):
+    def handleQuit(self, obj, room, inventory):
         return
 
-    def handleHelp(self):
+    def handleHelp(self, obj, room, inventory):
         print("\n".join(HELP_TEXT))
 
-    def handleLook(self):
-        print(self._tokenized["room"].getLongDescription())
+    def handleLook(self, obj, room, inventory):
+        print(room.getLongDescription())
+        if room.getContents():
+            for item in room.getContents():
+                print(f"There is {item.getDescription()}.")
 
-    def handleInventory(self):
-        return
+    def handleInventory(self, obj, room, inventory):
+        if len(inventory) == 0:
+            print("You are empty-handed.")
+        else:
+            print("You are carrying:")
+            for item in inventory:
+                print(item.getDescription())
 
-    def handleTake(self):
-        return
+    def handleTake(self, obj, room, inventory):
+        for item in room.getContents():
+            if item.getName() == obj:
+                inventory.append(item)
+                room.removeObject(item)
+                print("Taken.")
+        return inventory
 
-    def handleDrop(self):
+    def handleDrop(self, obj, room, inventory):
+        for item in inventory:
+            if item.getName() == obj:
+                inventory.remove(item)
+                room.addObject(item)
+                print("Dropped.")
         return
