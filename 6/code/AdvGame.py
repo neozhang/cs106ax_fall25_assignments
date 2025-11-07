@@ -35,14 +35,38 @@ HELP_TEXT = [
     "I also know about a number of objects hidden within the cave which you",
     "can TAKE or DROP.  To see what objects you're carrying, say INVENTORY.",
     "To reprint the detailed description of where you are, say LOOK.  If you",
-    "want to end your adventure, say QUIT."
+    "want to end your adventure, say QUIT.",
 ]
 
-class AdvGame:
 
+class AdvGame:
     def __init__(self, prefix):
         """Reads the game data from files with the specified prefix."""
+        self._rooms = {}  # {name: AdvRoom}
+        with open(f"{prefix}Rooms.txt") as f:
+            while True:
+                currentRoom = AdvRoom.readRoom(f)
+                if currentRoom is None:
+                    break
+                self._rooms[currentRoom.getName()] = currentRoom
+
+    def getRooms(self):
+        """Returns the map of rooms"""
+        return self._rooms
+
+    def getFirstRoom(self):
+        """Returns the first room in the map"""
+        return next(iter(self._rooms.values()))
 
     def run(self):
         """Plays the adventure game stored in this object."""
-
+        verb = ""
+        while verb != "QUIT":
+            current = self.getFirstRoom()
+            print(current.getLongDescription())
+            verb = input("> ").strip().upper()
+            next = current.getNextRoom(verb)
+            if next is None:
+                print("You can't go that way.")
+            else:
+                current = next

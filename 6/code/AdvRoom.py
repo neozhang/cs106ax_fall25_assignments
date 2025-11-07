@@ -18,23 +18,55 @@ This module is responsible for modeling a single room in Adventure.
 
 MARKER = "-----"
 
-class AdvRoom:
 
+class AdvRoom:
     def __init__(self, name, shortdesc, longdesc, passages):
         """Creates a new room with the specified attributes."""
+        self._name = name
+        self._shortdesc = shortdesc
+        self._longdesc = longdesc
+        self._passages = passages
 
     def getName(self):
         """Returns the name of this room.."""
+        return self._name
 
     def getShortDescription(self):
         """Returns a one-line short description of this room.."""
+        return self._shortdesc
 
     def getLongDescription(self):
         """Returns the list of lines describing this room."""
+        return self._longdesc
 
     def getNextRoom(self, verb):
         """Returns the name of the destination room after applying verb."""
+        return self._passages.get(verb)
 
     @staticmethod
     def readRoom(f):
         """Reads a room from the data file."""
+        name = f.readline().rstrip()
+        if name == "":
+            return None
+        shortdesc = f.readline().rstrip()
+        longdesc = ""
+        while True:
+            line = f.readline().rstrip()
+            if line == MARKER:
+                break
+            longdesc += line + "\n"
+        passages = {}
+        while True:
+            line = f.readline().rstrip()
+            if line == "":
+                break
+            colon = line.find(":")
+            if colon == -1:
+                raise ValueError("Missing colon in " + line)
+            verb = line[:colon].strip().upper()
+            destination = line[
+                colon + 1 :
+            ].strip()  # TODO: this should be a Room object
+            passages[verb] = destination
+        return AdvRoom(name, shortdesc, longdesc, passages)
