@@ -65,8 +65,6 @@ class AdvRoom:
             if colon == -1:
                 raise ValueError("Missing colon in " + line)
             verb = line[:colon].strip().upper()
-            destination = line[
-                colon + 1 :
-            ].strip()  # TODO: this should be a Room object
+            destination = line[colon + 1 :].strip()
             passages[verb] = destination
         return AdvRoom(name, shortdesc, longdesc, passages)

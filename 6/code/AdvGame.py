@@ -58,14 +58,18 @@ class AdvGame:
         """Returns the first room in the map"""
         return next(iter(self._rooms.values()))
 
+    def getRoomByName(self, name):
+        """Returns the AdvRoom object by its name"""
+        return self._rooms.get(name)
+
     def run(self):
         """Plays the adventure game stored in this object."""
         verb = ""
+        current = self.getFirstRoom()
         while verb != "QUIT":
-            current = self.getFirstRoom()
             print(current.getLongDescription())
             verb = input("> ").strip().upper()
-            next = current.getNextRoom(verb)
+            next = self.getRoomByName(current.getNextRoom(verb))
             if next is None:
                 print("You can't go that way.")
             else:
