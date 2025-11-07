@@ -67,7 +67,11 @@ class AdvGame:
         verb = ""
         current = self.getFirstRoom()
         while verb != "QUIT":
-            print(current.getLongDescription())
+            if current.hasBeenVisited():
+                print(current.getShortDescription())
+            else:
+                print(current.getLongDescription())
+                current.setVisited()
             verb = input("> ").strip().upper()
             next = self.getRoomByName(current.getNextRoom(verb))
             if next is None:

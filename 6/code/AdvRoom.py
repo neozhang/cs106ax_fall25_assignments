@@ -26,6 +26,7 @@ class AdvRoom:
         self._shortdesc = shortdesc
         self._longdesc = longdesc
         self._passages = passages
+        self._visited = False
 
     def getName(self):
         """Returns the name of this room.."""
@@ -42,6 +43,13 @@ class AdvRoom:
     def getNextRoom(self, verb):
         """Returns the name of the destination room after applying verb."""
         return self._passages.get(verb)
+
+    def setVisited(self):
+        if not self._visited:
+            self._visited = True
+
+    def hasBeenVisited(self):
+        return self._visited
 
     @staticmethod
     def readRoom(f):
