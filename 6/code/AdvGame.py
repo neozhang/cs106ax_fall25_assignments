@@ -5,8 +5,6 @@ This module defines the AdvGame class, which records the information
 necessary to play a game.
 """
 
-from pickle import OBJ
-
 from AdvObject import AdvObject
 from AdvRoom import AdvRoom
 from tokenscanner import TokenScanner
@@ -47,13 +45,14 @@ class AdvGame:
     def __init__(self, prefix):
         """Reads the game data from files with the specified prefix."""
         self._rooms = {}  # {name: AdvRoom}
-        self._inventory = []
         with open(f"{prefix}Rooms.txt") as f:
             while True:
                 currentRoom = AdvRoom.readRoom(f)
                 if currentRoom is None:
                     break
                 self._rooms[currentRoom.getName()] = currentRoom
+
+        self._inventory = []
         with open(f"{prefix}Objects.txt") as f:
             while True:
                 currentObject = AdvObject.readObject(f)
@@ -75,6 +74,20 @@ class AdvGame:
         """Returns the first room in the map"""
         return next(iter(self._rooms.values()))
 
+    def getNextRoom(self, currentRoom, verb):
+        """Returns the next room in the destination"""
+        passage = currentRoom.getPassage(verb)
+        if passage is None:
+            return None
+        else:
+            for item in self._inventory:
+                if "obj" in passage and passage["obj"] == item.getName():
+                    room = passage["objDest"]
+                    break
+                else:
+                    room = passage["defaultDest"]
+            return self.getRoomByName(room)
+
     def getRoomByName(self, name):
         """Returns the AdvRoom object by its name"""
         return self._rooms.get(name)
@@ -82,7 +95,7 @@ class AdvGame:
     def run(self):
         """Plays the adventure game stored in this object."""
         current = self.getFirstRoom()
-        prompt = Prompt("")
+        prompt = Prompt()
 
         while prompt.getVerb() != "QUIT":
             if not prompt.isBuiltin():
@@ -98,7 +111,7 @@ class AdvGame:
             prompt.setInput(text, self._synonyms)
             if prompt.execute(current, self._inventory):
                 continue
-            next = self.getRoomByName(current.getNextRoom(prompt.getVerb()))
+            next = self.getNextRoom(current, prompt.getVerb())
             if next is None:
                 print("You can't go that way.")
             else:
@@ -106,7 +119,7 @@ class AdvGame:
 
 
 class Prompt:
-    def __init__(self, input):
+    def __init__(self, input=""):
         self._builtins = {
             "QUIT": self.handleQuit,
             "HELP": self.handleHelp,
@@ -123,12 +136,12 @@ class Prompt:
     def getObj(self):
         return self._tokenized["obj"]
 
-    def setInput(self, input, synonyms={}):
+    def setInput(self, input, synonyms=None):
         self._raw = input
         self._tokenized = {}
         scanner = TokenScanner(input)
         verb = scanner.nextToken().strip().upper() if scanner.hasMoreTokens() else None
-        if synonyms is not None and verb in synonyms.getSynonyms().keys():
+        if synonyms is not None and verb in synonyms.getSynonyms():
             verb = synonyms.getSynonym(verb)
         self._tokenized["verb"] = verb
         self._tokenized["obj"] = ""
@@ -136,12 +149,12 @@ class Prompt:
             self._tokenized["obj"] += scanner.nextToken().strip().upper()
 
     def isBuiltin(self):
-        return self._tokenized["verb"] in self._builtins.keys()
+        return self._tokenized["verb"] in self._builtins
 
     def execute(self, room, inventory):
         """Routes built-in commands to the right handlers; returns True if handled"""
         verb = self.getVerb()
-        if verb in self._builtins.keys():
+        if verb in self._builtins:
             handler = self._builtins[verb]
             obj = self.getObj()
             handler(obj, room, inventory)
@@ -166,7 +179,7 @@ class Prompt:
         else:
             print("You are carrying:")
             for item in inventory:
-                print(item.getDescription())
+                print(f"{item.getDescription()}")
 
     def handleTake(self, obj, room, inventory):
         for item in room.getContents():
@@ -204,4 +217,4 @@ class Synonyms:
         return self._synonyms
 
     def isSynonym(self, word):
-        return word in self._synonyms.keys()
+        return word in self._synonyms

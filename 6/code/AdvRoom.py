@@ -41,8 +41,8 @@ class AdvRoom:
         """Returns the list of lines describing this room."""
         return self._longdesc
 
-    def getNextRoom(self, verb):
-        """Returns the name of the destination room after applying verb."""
+    def getPassage(self, verb):
+        """Returns the destination list of this room"""
         return self._passages.get(verb)
 
     def setVisited(self):
@@ -87,6 +87,14 @@ class AdvRoom:
             if colon == -1:
                 raise ValueError("Missing colon in " + line)
             verb = line[:colon].strip().upper()
-            destination = line[colon + 1 :].strip()
-            passages[verb] = destination
+            destination = line[colon + 1 :].strip()  # take the part after the colon
+            if verb not in passages:
+                passages[verb] = {}
+            if "/" in destination:
+                passages[verb]["objDest"], passages[verb]["obj"] = destination.split(
+                    "/"
+                )
+            else:
+                passages[verb]["defaultDest"] = destination
+
         return AdvRoom(name, shortdesc, longdesc, passages)
