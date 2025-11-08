@@ -45,6 +45,12 @@ class AdvRoom:
         """Returns the destination list of this room"""
         return self._passages.get(verb)
 
+    def hasPassage(self, verb):
+        return verb in self._passages
+
+    def hasForcedPassage(self):
+        return self._passages.get("FORCED") is not None
+
     def setVisited(self):
         if not self._visited:
             self._visited = True

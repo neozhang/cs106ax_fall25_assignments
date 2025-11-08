@@ -5,6 +5,8 @@ This module defines the AdvGame class, which records the information
 necessary to play a game.
 """
 
+from posixpath import curdir
+
 from AdvObject import AdvObject
 from AdvRoom import AdvRoom
 from tokenscanner import TokenScanner
@@ -98,6 +100,17 @@ class AdvGame:
         prompt = Prompt()
 
         while prompt.getVerb() != "QUIT":
+            # Handle forced passage
+            if current.hasForcedPassage():
+                next = self.getNextRoom(current, "FORCED")
+                if next is not None:
+                    current = next
+                    print(current.getLongDescription())
+                    continue
+                else:  # End of world. Game over. -> EXIT.
+                    break
+
+            # Handle non-forced passage
             if not prompt.isBuiltin():
                 if current.hasBeenVisited():
                     print(current.getShortDescription())
@@ -107,11 +120,23 @@ class AdvGame:
                         for obj in current.getContents():
                             print(f"There is {obj.getDescription()} here.")
                     current.setVisited()
+
+            # Get user input
             text = input("> ").strip().upper()
             prompt.setInput(text, self._synonyms)
+
+            # Execute built-in prompt
             if prompt.execute(current, self._inventory):
                 continue
-            next = self.getNextRoom(current, prompt.getVerb())
+
+            verb = prompt.getVerb()
+
+            # Handle wildcard passage
+            if current.hasPassage("*") and not current.hasPassage(verb):
+                verb = "*"
+
+            # Handle movement
+            next = self.getNextRoom(current, verb)
             if next is None:
                 print("You can't go that way.")
             else:
