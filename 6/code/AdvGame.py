@@ -65,6 +65,7 @@ class AdvGame:
                     self._rooms[currentObject.getInitialLocation()].addObject(
                         currentObject
                     )
+        self._synonyms = Synonyms(prefix + "Synonyms.txt")
 
     def getRooms(self):
         """Returns the map of rooms"""
@@ -94,7 +95,7 @@ class AdvGame:
                             print(f"There is {obj.getDescription()} here.")
                     current.setVisited()
             text = input("> ").strip().upper()
-            prompt.setInput(text)
+            prompt.setInput(text, self._synonyms)
             if prompt.execute(current, self._inventory):
                 continue
             next = self.getRoomByName(current.getNextRoom(prompt.getVerb()))
@@ -122,12 +123,14 @@ class Prompt:
     def getObj(self):
         return self._tokenized["obj"]
 
-    def setInput(self, input):
+    def setInput(self, input, synonyms={}):
         self._raw = input
         self._tokenized = {}
         scanner = TokenScanner(input)
-        next = scanner.nextToken().strip().upper() if scanner.hasMoreTokens() else None
-        self._tokenized["verb"] = next
+        verb = scanner.nextToken().strip().upper() if scanner.hasMoreTokens() else None
+        if synonyms is not None and verb in synonyms.getSynonyms().keys():
+            verb = synonyms.getSynonym(verb)
+        self._tokenized["verb"] = verb
         self._tokenized["obj"] = ""
         while scanner.hasMoreTokens():
             self._tokenized["obj"] += scanner.nextToken().strip().upper()
@@ -180,3 +183,25 @@ class Prompt:
                 room.addObject(item)
                 print("Dropped.")
         return
+
+
+class Synonyms:
+    def __init__(self, filename):
+        self._synonyms = {}
+        try:
+            with open(filename, "r") as f:
+                for line in f:
+                    words = line.strip().split("=")
+                    if len(words) > 1:
+                        self._synonyms[words[0]] = words[1]
+        except FileNotFoundError:
+            self._synonyms = {}
+
+    def getSynonym(self, word):
+        return self._synonyms.get(word)
+
+    def getSynonyms(self):
+        return self._synonyms
+
+    def isSynonym(self, word):
+        return word in self._synonyms.keys()
