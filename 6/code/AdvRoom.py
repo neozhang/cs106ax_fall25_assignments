@@ -46,36 +46,48 @@ class AdvRoom:
         return self._passages.get(verb)
 
     def hasPassage(self, verb):
+        """Returns True if this room has a passage for the given verb."""
         return verb in self._passages
 
     def hasForcedPassage(self):
+        """Returns True if this room has a forced passage."""
         return self._passages.get("FORCED") is not None
 
     def setVisited(self):
+        """Sets the visited status of this room."""
         if not self._visited:
             self._visited = True
 
     def hasBeenVisited(self):
+        """Returns True if this room has been visited."""
         return self._visited
 
     def addObject(self, obj):
+        """Adds an object to this room."""
         self._objects.append(obj)
 
     def removeObject(self, obj):
+        """Removes an object from this room."""
         self._objects.remove(obj)
 
     def getContents(self):
+        """Returns the contents of this room."""
         return self._objects
 
     def containsObject(self, obj):
+        """Returns True if this room contains the given object."""
         return obj in self._objects
 
     @staticmethod
     def readRoom(f):
         """Reads a room from the data file."""
+
+        # Read room name
         name = f.readline().rstrip()
         if name == "":
             return None
+
+        # Read room descriptions
         shortdesc = f.readline().rstrip()
         longdesc = ""
         while True:
@@ -84,6 +96,8 @@ class AdvRoom:
                 break
             longdesc += line + "\n"
         longdesc = longdesc.rstrip()
+
+        # Read room passages
         passages = {}
         while True:
             line = f.readline().rstrip()
@@ -94,6 +108,8 @@ class AdvRoom:
                 raise ValueError("Missing colon in " + line)
             verb = line[:colon].strip().upper()
             destination = line[colon + 1 :].strip()  # take the part after the colon
+
+            # Handle conditional destinations
             if verb not in passages:
                 passages[verb] = {}
             if "/" in destination:

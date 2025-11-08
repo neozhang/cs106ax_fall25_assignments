@@ -16,7 +16,7 @@ This module defines a class that models an object in Adventure.
 class AdvObject:
     def __init__(self, name, description, location):
         """Creates an AdvObject from the specified properties."""
-        self._name = name
+        self._name = name.upper()
         self._description = description
         self._location = location
 

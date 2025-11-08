@@ -5,8 +5,6 @@ This module defines the AdvGame class, which records the information
 necessary to play a game.
 """
 
-from posixpath import curdir
-
 from AdvObject import AdvObject
 from AdvRoom import AdvRoom
 from tokenscanner import TokenScanner
@@ -42,30 +40,14 @@ HELP_TEXT = [
     "want to end your adventure, say QUIT.",
 ]
 
+WILDCARD = "*"
+
 
 class AdvGame:
     def __init__(self, prefix):
         """Reads the game data from files with the specified prefix."""
-        self._rooms = {}  # {name: AdvRoom}
-        with open(f"{prefix}Rooms.txt") as f:
-            while True:
-                currentRoom = AdvRoom.readRoom(f)
-                if currentRoom is None:
-                    break
-                self._rooms[currentRoom.getName()] = currentRoom
-
-        self._inventory = []
-        with open(f"{prefix}Objects.txt") as f:
-            while True:
-                currentObject = AdvObject.readObject(f)
-                if currentObject is None:
-                    break
-                if currentObject.getInitialLocation() == "PLAYER":
-                    self._inventory.append(currentObject)
-                else:
-                    self._rooms[currentObject.getInitialLocation()].addObject(
-                        currentObject
-                    )
+        self._rooms = self.readRooms(prefix)
+        self._inventory = self.readObjects(prefix)
         self._synonyms = Synonyms(prefix + "Synonyms.txt")
 
     def getRooms(self):
@@ -77,22 +59,58 @@ class AdvGame:
         return next(iter(self._rooms.values()))
 
     def getNextRoom(self, currentRoom, verb):
-        """Returns the next room in the destination"""
+        """Returns the next room in the destination."""
         passage = currentRoom.getPassage(verb)
-        if passage is None:
+        if not passage:
             return None
-        else:
+
+        # If passage has an object-specific destination, prefer it when player has object.
+        if "objDest" in passage:
+            required_obj = passage.get("obj")
             for item in self._inventory:
-                if "obj" in passage and passage["obj"] == item.getName():
-                    room = passage["objDest"]
+                if item.getName() == required_obj:
+                    dest = passage["objDest"]
                     break
-                else:
-                    room = passage["defaultDest"]
-            return self.getRoomByName(room)
+            else:
+                # required object not present
+                # fall back to defaultDest if available, otherwise no passage
+                dest = passage.get("defaultDest")
+        else:
+            dest = passage.get("defaultDest")
+
+        if dest is None:
+            return None
+        return self.getRoomByName(dest)
 
     def getRoomByName(self, name):
         """Returns the AdvRoom object by its name"""
         return self._rooms.get(name)
+
+    def readRooms(self, prefix):
+        """Reads room data from a file and adds them to the game"""
+        rooms = {}
+        with open(f"{prefix}Rooms.txt") as f:
+            while True:
+                currentRoom = AdvRoom.readRoom(f)
+                if currentRoom is None:
+                    break
+                rooms[currentRoom.getName()] = currentRoom
+        return rooms
+
+    def readObjects(self, prefix):
+        inventory = []
+        with open(f"{prefix}Objects.txt") as f:
+            while True:
+                currentObject = AdvObject.readObject(f)
+                if currentObject is None:
+                    break
+                if currentObject.getInitialLocation() == "PLAYER":
+                    inventory.append(currentObject)
+                else:
+                    self._rooms[currentObject.getInitialLocation()].addObject(
+                        currentObject
+                    )
+        return inventory
 
     def run(self):
         """Plays the adventure game stored in this object."""
@@ -132,8 +150,8 @@ class AdvGame:
             verb = prompt.getVerb()
 
             # Handle wildcard passage
-            if current.hasPassage("*") and not current.hasPassage(verb):
-                verb = "*"
+            if current.hasPassage(WILDCARD) and not current.hasPassage(verb):
+                verb = WILDCARD
 
             # Handle movement
             next = self.getNextRoom(current, verb)
@@ -144,6 +162,8 @@ class AdvGame:
 
 
 class Prompt:
+    """A class representing a prompt, handles user input and executes built-in commands."""
+
     def __init__(self, input=""):
         self._builtins = {
             "QUIT": self.handleQuit,
@@ -162,6 +182,7 @@ class Prompt:
         return self._tokenized["obj"]
 
     def setInput(self, input, synonyms=None):
+        """Sets the input for the prompt."""
         self._raw = input
         self._tokenized = {}
         scanner = TokenScanner(input)
@@ -207,23 +228,31 @@ class Prompt:
                 print(f"{item.getDescription()}")
 
     def handleTake(self, obj, room, inventory):
+        if not obj:
+            print("Take what?")
+            return
         for item in room.getContents():
             if item.getName() == obj:
                 inventory.append(item)
                 room.removeObject(item)
                 print("Taken.")
-        return inventory
+                return
 
     def handleDrop(self, obj, room, inventory):
+        if not obj:
+            print("Drop what?")
+            return
         for item in inventory:
             if item.getName() == obj:
                 inventory.remove(item)
                 room.addObject(item)
                 print("Dropped.")
-        return
+                return
 
 
 class Synonyms:
+    """A class representing a set of synonyms for words."""
+
     def __init__(self, filename):
         self._synonyms = {}
         try:
@@ -231,15 +260,20 @@ class Synonyms:
                 for line in f:
                     words = line.strip().split("=")
                     if len(words) > 1:
-                        self._synonyms[words[0]] = words[1]
+                        self._synonyms[words[0].strip().upper()] = (
+                            words[1].strip().upper()
+                        )
         except FileNotFoundError:
             self._synonyms = {}
 
     def getSynonym(self, word):
+        """Returns the synonym for the given word."""
         return self._synonyms.get(word)
 
     def getSynonyms(self):
+        """Returns a dictionary of synonyms."""
         return self._synonyms
 
     def isSynonym(self, word):
+        """Returns True if the given word is a synonym."""
         return word in self._synonyms
