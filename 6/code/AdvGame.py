@@ -47,7 +47,7 @@ class AdvGame:
     def __init__(self, prefix):
         """Reads the game data from files with the specified prefix."""
         self._rooms = self.readRooms(prefix)
-        self._inventory = self.readObjects(prefix)
+        self._player = Player(inventory=self.readObjects(prefix))
         self._synonyms = Synonyms(prefix + "Synonyms.txt")
 
     def getRooms(self):
@@ -67,7 +67,7 @@ class AdvGame:
         # If passage has an object-specific destination, prefer it when player has object.
         if "objDest" in passage:
             required_obj = passage.get("obj")
-            for item in self._inventory:
+            for item in self._player.getInventory():
                 if item.getName() == required_obj:
                     dest = passage["objDest"]
                     break
@@ -144,7 +144,7 @@ class AdvGame:
             prompt.setInput(text, self._synonyms)
 
             # Execute built-in prompt
-            if prompt.execute(current, self._inventory):
+            if prompt.execute(current, self._player.getInventory()):
                 continue
 
             verb = prompt.getVerb()
@@ -277,3 +277,31 @@ class Synonyms:
     def isSynonym(self, word):
         """Returns True if the given word is a synonym."""
         return word in self._synonyms
+
+
+class Player:
+    """A class representing a player in the game."""
+
+    def __init__(self, name=None, inventory=None):
+        self._name = name
+        self._inventory = [] if inventory is None else inventory
+
+    def getName(self):
+        """Returns the player's name."""
+        return self._name
+
+    def getInventory(self):
+        """Returns the player's inventory."""
+        return self._inventory
+
+    def addItem(self, item):
+        """Adds an item to the player's inventory."""
+        self._inventory.append(item)
+
+    def removeItem(self, item):
+        """Removes an item from the player's inventory."""
+        self._inventory.remove(item)
+
+    def hasItem(self, item):
+        """Returns True if the player has the given item."""
+        return item in self._inventory
