@@ -66,6 +66,10 @@ class AdvCharacter:
         """Returns True if the player has the given item."""
         return item in self._inventory
 
+    def isAlive(self):
+        """Returns True if the player is alive"""
+        return self._isAlive
+
     @staticmethod
     def createRandomCharacter(
         position, name="THE ONE", level=1, isNPC=True, inventory=[]
@@ -73,7 +77,7 @@ class AdvCharacter:
         """Creates a random character at given position."""
         # build stats
         totalCap = level * TOTAL_CAP_TO_LVL  # = str + dex + int
-        strength = random.randint(1, totalCap)
+        strength = random.randint(1, totalCap - 10)
         dexterity = random.randint(1, totalCap - strength)
         intelligence = totalCap - strength - dexterity
         maxHealth = strength * MAXHEALTH_TO_STR + level * MAXHEALTH_TO_LVL
@@ -92,7 +96,7 @@ class AdvCharacter:
 
     @staticmethod
     def readCharacter(f):
-        """Reads a character from a file."""
+        """Reads a character from a file. Only works for NPC."""
         name = f.readline().strip()
         level = int(f.readline().strip())
         stats = {}
@@ -104,4 +108,4 @@ class AdvCharacter:
             inventory.append(line.strip())
         position = f.readline().strip()
         isAlive = f.readline().strip() == "True"
-        return AdvCharacter(name, level, stats, inventory, position, isAlive)
+        return AdvCharacter(name, level, stats, inventory, position, True, isAlive)
