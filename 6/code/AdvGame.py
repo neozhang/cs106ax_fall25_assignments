@@ -61,11 +61,11 @@ class AdvGame:
         """Returns the map of rooms"""
         return self._rooms
 
-    def getFirstRoom(self):
+    def getFirstRoom(self) -> AdvRoom:
         """Returns the first room in the map"""
         return next(iter(self._rooms.values()))
 
-    def getNextRoom(self, currentRoom, verb):
+    def getNextRoom(self, currentRoom, verb) -> AdvRoom | None:
         """Returns the next room in the destination."""
         passage = currentRoom.getPassage(verb)
         if not passage:
@@ -76,7 +76,7 @@ class AdvGame:
             required_obj = passage.get("obj")
             for item in self._player.getInventory():
                 if item.getName() == required_obj:
-                    dest = passage["objDest"]
+                    dest = passage.get("objDest")
                     break
             else:
                 # required object not present
@@ -89,7 +89,7 @@ class AdvGame:
             return None
         return self.getRoomByName(dest)
 
-    def getRoomByName(self, name: str):
+    def getRoomByName(self, name: str) -> AdvRoom | None:
         """Returns the AdvRoom object by its name"""
         return self._rooms.get(name)
 
@@ -105,7 +105,7 @@ class AdvGame:
         else:
             return None
 
-    def readRooms(self, prefix):
+    def readRooms(self, prefix) -> dict[str, AdvRoom]:
         """Reads room data from a file and adds them to the game"""
         rooms = {}
         with open(f"{prefix}Rooms.txt") as f:
@@ -191,7 +191,7 @@ class AdvGame:
                 print("You can't go that way.")
             else:
                 current = next
-                self._player.setPosition(current)
+                self._player.setPosition(current.getName())
 
 
 class Prompt:

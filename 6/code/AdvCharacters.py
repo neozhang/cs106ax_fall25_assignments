@@ -5,8 +5,8 @@ PT_TO_LVL = 30
 PT_PER_LEVEL = 5
 MAXHEALTH_TO_LVL = 80
 MAXHEALTH_TO_STR = 2
-HIT_TO_STR = 1.5
-DEFENSE_TO_STR = 1
+HIT_TO_STR = 3
+DEFENSE_TO_STR = 1.2
 LEVEL_BASE = 100
 LEVEL_POWER = 1.5
 BASE_CRIT_MULTIPLIER = 1.5
@@ -17,7 +17,7 @@ MAX_CRIT_CHANCE = 0.2
 class AdvCharacter:
     """A class representing a character in the game."""
 
-    def __init__(self, name, level, stats, inventory, position, isNPC, isAlive):
+    def __init__(self, name: str, level: int, stats: dict, inventory: list, position: str, isNPC: bool, isAlive: bool):
         self._name = name
         self._level = level
         self._stats = stats
@@ -83,7 +83,7 @@ class AdvCharacter:
         return self._position
 
     def getExperience(self):
-        """Returns the palyer's experience."""
+        """Returns the player's experience."""
         return self._stats["experience"]
 
     def setExperience(self, experience: int):
@@ -152,7 +152,7 @@ class AdvCharacter:
             "dexterity": dexterity,
             "intelligence": intelligence,
             "experience": 0,
-            "hit": strength * HIT_TO_STR,
+            "hit": strength * HIT_TO_STR if not isNPC else strength,
             "defense": strength * DEFENSE_TO_STR,
         }
         return AdvCharacter(name, level, stats, inventory, position, isNPC, True)
@@ -176,7 +176,8 @@ class AdvCharacter:
 
 def randThreeIntsSum(sum):
     """Generate 3 integers which sum to a given integer."""
-    a = random.randint(0, sum)
-    b = random.randint(0, sum - a)
+    floor = max(sum // 4, 1)
+    a = random.randint(floor, sum - floor * 2)
+    b = random.randint(floor, sum - floor - a)
     c = sum - a - b
     return a, b, c

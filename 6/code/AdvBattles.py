@@ -1,4 +1,3 @@
-import random
 from math import sqrt
 
 EXP_TO_LVL = 100
