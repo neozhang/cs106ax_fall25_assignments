@@ -9,6 +9,9 @@ HIT_TO_STR = 1.5
 DEFENSE_TO_STR = 1
 LEVEL_BASE = 100
 LEVEL_POWER = 1.5
+BASE_CRIT_MULTIPLIER = 1.5
+MAX_DEX_BONUS = 5.0
+MAX_CRIT_CHANCE = 0.2
 
 
 class AdvCharacter:
@@ -104,6 +107,13 @@ class AdvCharacter:
         # store the remaining XP
         self._stats["experience"] = experience
         return leveled
+
+    def getCritMultiplier(self):
+        critChance = min(self._stats["intelligence"] / 100, MAX_CRIT_CHANCE)
+        dexBonus = min(self._stats["dexterity"] / 100, MAX_DEX_BONUS)
+        if random.random() < critChance:
+            return BASE_CRIT_MULTIPLIER + dexBonus
+        return 1.0
 
     def getInventory(self):
         """Returns the player's inventory."""

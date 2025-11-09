@@ -10,6 +10,7 @@ class AdvBattle:
         self._player = player
         self._npc = npc
         self._playerStats = player.getStats()
+        # Only Player has crit
         self._npcStats = npc.getStats()
         self._playerIsAlive = player.isAlive()
         self._npcIsAlive = npc.isAlive()
@@ -20,7 +21,8 @@ class AdvBattle:
     def processRound(self, playerFirstMove):
         """Fight one round of the battle."""
         # Read stats (these are dicts we update)
-        phit = self._playerStats["hit"]
+        pcm = self._player.getCritMultiplier()  # only player has crit
+        phit = self._playerStats["hit"] * pcm
         pdef = self._playerStats["defense"]
         # php = current player health (we will update the dict after applying damage)
         php = self._playerStats["health"]
@@ -38,6 +40,8 @@ class AdvBattle:
             nhp -= playerDamageToNPC
             # store updated NPC health
             self._npcStats["health"] = nhp
+            if pcm > 1.0:
+                print(f"{self._player.getName()} landed a critical hit!")
             print(
                 f"{self._player.getName()} attacked the NPC and caused {playerDamageToNPC} points of damage."
             )
@@ -69,6 +73,8 @@ class AdvBattle:
             # player retaliates
             nhp -= playerDamageToNPC
             self._npcStats["health"] = nhp
+            if pcm > 1.0:
+                print(f"{self._player.getName()} landed a critical hit!")
             print(
                 f"{self._player.getName()} fought back and caused {playerDamageToNPC} points of damage."
             )
