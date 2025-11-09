@@ -30,11 +30,11 @@ class AdvRoom:
         self._objects = []
 
     def getName(self):
-        """Returns the name of this room.."""
+        """Returns the name of this room."""
         return self._name
 
     def getShortDescription(self):
-        """Returns a one-line short description of this room.."""
+        """Returns a one-line short description of this room."""
         return self._shortdesc
 
     def getLongDescription(self):
@@ -42,7 +42,7 @@ class AdvRoom:
         return self._longdesc
 
     def getPassage(self, verb):
-        """Returns the destination list of this room"""
+        """Returns the destination list of this room."""
         return self._passages.get(verb)
 
     def hasPassage(self, verb):
