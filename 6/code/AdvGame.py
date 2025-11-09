@@ -163,7 +163,7 @@ class AdvGame:
                         for obj in current.getContents():
                             print(f"There is {obj.getDescription()} here.")
                     current.setVisited()
-                npc = self.createNPC(self._player.getLevel() - 1, current)
+                npc = self.createNPC(self._player.getLevel(), current.getName())
                 print(f"You encountered a NPC: {npc.getName()}. Fight or Flee?")
 
             # Get user input
