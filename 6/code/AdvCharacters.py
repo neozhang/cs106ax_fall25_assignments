@@ -1,11 +1,14 @@
 import random
 
 # Constants
-TOTAL_CAP_TO_LVL = 30
+PT_TO_LVL = 30
+PT_PER_LEVEL = 5
 MAXHEALTH_TO_LVL = 80
 MAXHEALTH_TO_STR = 2
 HIT_TO_STR = 1.5
 DEFENSE_TO_STR = 1
+LEVEL_BASE = 100
+LEVEL_POWER = 1.5
 
 
 class AdvCharacter:
@@ -42,6 +45,27 @@ class AdvCharacter:
         """Returns the player's level."""
         return self._level
 
+    def setLevelUp(self, threshold):
+        """Processes level up logic."""
+        self._level += 1
+        s, d, i = randThreeIntsSum(PT_PER_LEVEL)
+        strength = self.getStats()["strength"] + s
+        dexterity = self.getStats()["dexterity"] + d
+        intelligence = self.getStats()["intelligence"] + i
+        maxHealth = strength * MAXHEALTH_TO_STR + MAXHEALTH_TO_LVL
+        health = maxHealth
+        experience = self._stats["experience"] - threshold
+        self._stats = {
+            "health": health,
+            "maxHealth": maxHealth,
+            "strength": strength,
+            "dexterity": dexterity,
+            "intelligence": intelligence,
+            "experience": experience,
+            "hit": strength * HIT_TO_STR,
+            "defense": strength * DEFENSE_TO_STR,
+        }
+
     def getStats(self):
         """Returns the player's stats."""
         return self._stats
@@ -49,6 +73,24 @@ class AdvCharacter:
     def getHealth(self):
         """Returns the player's health."""
         return self._position
+
+    def getExperience(self):
+        """Returns the palyer's experience."""
+        return self._stats["experience"]
+
+    def setExperience(self, experience: int):
+        """Sets the palyer's experience. Levels up when requirement met and returns True."""
+        nextLevelThreshold = int(
+            LEVEL_BASE * (self.getLevel() + 1) ** LEVEL_POWER
+        )  # TODO: consider multiple levels up
+        if experience >= nextLevelThreshold:
+            print(f"nextLevelThreshold: {nextLevelThreshold}")
+            print(f"experience: {experience}")
+            self.setLevelUp(nextLevelThreshold)
+            return True
+        else:
+            self._stats["experience"] = experience
+            return False
 
     def getInventory(self):
         """Returns the player's inventory."""
@@ -76,10 +118,8 @@ class AdvCharacter:
     ):
         """Creates a random character at given position."""
         # build stats
-        totalCap = level * TOTAL_CAP_TO_LVL  # = str + dex + int
-        strength = random.randint(1, totalCap - 10)
-        dexterity = random.randint(1, totalCap - strength)
-        intelligence = totalCap - strength - dexterity
+        p = level * PT_TO_LVL  # = str + dex + int
+        strength, dexterity, intelligence = randThreeIntsSum(p)
         maxHealth = strength * MAXHEALTH_TO_STR + level * MAXHEALTH_TO_LVL
         health = maxHealth
         stats = {
@@ -109,3 +149,11 @@ class AdvCharacter:
         position = f.readline().strip()
         isAlive = f.readline().strip() == "True"
         return AdvCharacter(name, level, stats, inventory, position, True, isAlive)
+
+
+def randThreeIntsSum(sum):
+    """Generate 3 integers which sum to a given integer."""
+    a = random.randint(0, sum)
+    b = random.randint(0, sum - a)
+    c = sum - a - b
+    return a, b, c

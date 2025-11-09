@@ -6,6 +6,7 @@ necessary to play a game.
 """
 
 import random
+from math import sqrt
 
 from AdvCharacters import AdvCharacter
 from AdvObject import AdvObject
@@ -44,6 +45,8 @@ HELP_TEXT = [
 ]
 
 WILDCARD = "*"
+EXP_TO_LVL = 100
+EXP_SQRT_MULTI = 10
 
 
 class AdvGame:
@@ -166,7 +169,7 @@ class AdvGame:
                             print(f"There is {obj.getDescription()} here.")
                     current.setVisited()
                 npc = self.createNPC(self._player.getLevel(), current.getName())
-                print(f"You encountered a NPC: {npc.getName()}. FIGHT or FLEE?")
+                print(f"You encountered a NPC: {npc.getName()}. FIGHT?")
 
             # Get user input
             text = input("> ").strip().upper()
@@ -208,7 +211,6 @@ class Prompt:
             "TAKE": self.handleTake,
             "DROP": self.handleDrop,
             "FIGHT": self.handleFight,
-            "FLEE": self.handleFlee,
         }
         self.setInput(input)
 
@@ -299,9 +301,6 @@ class Prompt:
         npc = room.getNpcs()[-1]
         battle = Battle(player, npc)
         return battle.fight()
-
-    def handleFlee(self, obj, room, player):
-        return
 
 
 class Synonyms:
@@ -404,6 +403,11 @@ class Battle:
                 self._npcIsAlive = False
                 return
 
+    def processReward(self):
+        """Returns the experience points gained from the battle."""
+        exp = sqrt(self._npc.getLevel() * EXP_TO_LVL) * EXP_SQRT_MULTI
+        return self._player.setExperience(self._player.getExperience() + exp)
+
     def fight(self):
         """Fights the battle until one survivor. Returns True if the Player won."""
         while True:
@@ -411,7 +415,10 @@ class Battle:
                 break
             self.processRound(self._playerFirstMove)
         if self._playerIsAlive:
-            print(f"{self._player.getName()} won the battle brilliantly!")
+            if self.processReward():
+                print(f"{self._player.getName()} won the battle and leveled up!")
+            else:
+                print(f"{self._player.getName()} won the battle brilliantly!")
             return True
         else:
             print(f"{self._player.getName()} died in the battle with honor.")
