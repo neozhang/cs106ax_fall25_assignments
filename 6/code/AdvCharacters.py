@@ -45,16 +45,21 @@ class AdvCharacter:
         """Returns the player's level."""
         return self._level
 
-    def setLevelUp(self, threshold):
-        """Processes level up logic."""
+    def setLevelUp(self):
+        """Processes level up logic (one level). Does NOT modify stored experience."""
+        # increment level
         self._level += 1
+        # distribute stat points for this one level-up
         s, d, i = randThreeIntsSum(PT_PER_LEVEL)
         strength = self.getStats()["strength"] + s
         dexterity = self.getStats()["dexterity"] + d
         intelligence = self.getStats()["intelligence"] + i
-        maxHealth = strength * MAXHEALTH_TO_STR + MAXHEALTH_TO_LVL
+        # recalc health (keeps the original per-level constant behavior)
+        maxHealth = strength * MAXHEALTH_TO_STR + self._level * MAXHEALTH_TO_LVL
         health = maxHealth
-        experience = self._stats["experience"] - threshold
+        # preserve existing experience (we do level-subtraction in setExperience)
+        experience = self._stats.get("experience")
+        # update stats in-place
         self._stats = {
             "health": health,
             "maxHealth": maxHealth,
@@ -79,18 +84,26 @@ class AdvCharacter:
         return self._stats["experience"]
 
     def setExperience(self, experience: int):
-        """Sets the palyer's experience. Levels up when requirement met and returns True."""
-        nextLevelThreshold = int(
-            LEVEL_BASE * (self.getLevel() + 1) ** LEVEL_POWER
-        )  # TODO: consider multiple levels up
-        if experience >= nextLevelThreshold:
-            print(f"nextLevelThreshold: {nextLevelThreshold}")
-            print(f"experience: {experience}")
-            self.setLevelUp(nextLevelThreshold)
-            return True
-        else:
-            self._stats["experience"] = experience
-            return False
+        """Sets the player's experience as remaining XP. Each level-up reduces XP by the per-level threshold.
+        Returns True if at least one level-up occurred, otherwise False.
+        """
+        # treat incoming value as the remaining XP to store (int)
+        experience = int(experience)
+        leveled = False
+        # repeatedly level up while remaining XP meets the per-level cost for the next level
+        while True:
+            nextLevelThreshold = int(LEVEL_BASE * (self.getLevel() + 1) ** LEVEL_POWER)
+            if experience >= nextLevelThreshold:
+                # consume the XP cost for this level and perform one level-up
+                experience -= nextLevelThreshold
+                self.setLevelUp()
+                leveled = True
+                # continue loop to check for additional possible level-ups
+                continue
+            break
+        # store the remaining XP
+        self._stats["experience"] = experience
+        return leveled
 
     def getInventory(self):
         """Returns the player's inventory."""
