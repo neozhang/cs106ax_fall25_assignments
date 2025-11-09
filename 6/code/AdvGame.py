@@ -250,12 +250,14 @@ class Prompt:
 
     def handleHelp(self, obj, room, player):
         print("\n".join(HELP_TEXT))
+        return True
 
     def handleLook(self, obj, room, player):
         print(room.getLongDescription())
         if room.getContents():
             for item in room.getContents():
                 print(f"There is {item.getDescription()}.")
+        return True
 
     def handleMe(self, obj, room, player):
         print(f"{player.getName()}: LEVEL {player.getLevel()} @ {player.getPosition()}")
@@ -265,6 +267,7 @@ class Prompt:
             print(f"{k}: {v}")
         print(MARKER)
         self.handleInventory(obj, room, player)
+        return True
 
     def handleInventory(self, obj, room, player):
         inventory = player.getInventory()
@@ -274,28 +277,29 @@ class Prompt:
             print("You are carrying:")
             for item in inventory:
                 print(f"{item.getDescription()}")
+        return True
 
     def handleTake(self, obj, room, player):
         if not obj:
             print("Take what?")
-            return
+            return True
         for item in room.getContents():
             if item.getName() == obj:
                 player.addItem(item)
                 room.removeObject(item)
                 print("Taken.")
-                return
+                return True
 
     def handleDrop(self, obj, room, player):
         if not obj:
             print("Drop what?")
-            return
+            return True
         for item in player.getInventory():
             if item.getName() == obj:
                 player.removeItem(item)
                 room.addObject(item)
                 print("Dropped.")
-                return
+                return True
 
     def handleFight(self, obj, room, player):
         npc = room.getNpcs()[-1]
