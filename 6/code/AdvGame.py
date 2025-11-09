@@ -88,15 +88,21 @@ class AdvGame:
             return None
         return self.getRoomByName(dest)
 
-    def getRoomByName(self, name):
+    def getRoomByName(self, name: str):
         """Returns the AdvRoom object by its name"""
         return self._rooms.get(name)
 
-    def createNPC(self, level, room):
-        """create"""
-        return AdvCharacter.createRandomCharacter(
-            room, name=f"npc_{room}", level=level, inventory=[]
-        )
+    def createNPC(self, level: int, roomName: str):
+        """Creates a NPC with given level in given room, and returns the NPC"""
+        room = self.getRoomByName(roomName)
+        if room is not None:
+            npc = AdvCharacter.createRandomCharacter(
+                roomName, name=f"npc_{roomName}", level=level, inventory=[]
+            )
+            room.addNpc(npc)
+            return npc
+        else:
+            return None
 
     def readRooms(self, prefix):
         """Reads room data from a file and adds them to the game"""
@@ -195,6 +201,8 @@ class Prompt:
             "LOOK": self.handleLook,
             "TAKE": self.handleTake,
             "DROP": self.handleDrop,
+            "FIGHT": self.handleFight,
+            "FLEE": self.handleFlee,
         }
         self.setInput(input)
 
@@ -281,6 +289,12 @@ class Prompt:
                 room.addObject(item)
                 print("Dropped.")
                 return
+
+    def handleFight(self, obj, room, player):
+        return
+
+    def handleFlee(self, obj, room, player):
+        return
 
 
 class Synonyms:

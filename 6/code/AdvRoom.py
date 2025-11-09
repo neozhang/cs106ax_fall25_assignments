@@ -28,6 +28,7 @@ class AdvRoom:
         self._passages = passages
         self._visited = False
         self._objects = []
+        self._npcs = []
 
     def getName(self):
         """Returns the name of this room."""
@@ -77,6 +78,17 @@ class AdvRoom:
     def containsObject(self, obj):
         """Returns True if this room contains the given object."""
         return obj in self._objects
+
+    def addNpc(self, npc):
+        """Adds a NPC to this room"""
+        self._npcs.append(npc)
+
+    def removeNpc(self, npc):
+        """Adds a NPC to this room"""
+        self._npcs.remove(npc)
+
+    def getNpcs(self):
+        return self._npcs
 
     @staticmethod
     def readRoom(f):
