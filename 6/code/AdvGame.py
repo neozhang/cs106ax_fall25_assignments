@@ -7,7 +7,7 @@ necessary to play a game.
 
 from AdvCharacters import AdvCharacter
 from AdvObject import AdvObject
-from AdvRoom import AdvRoom
+from AdvRoom import MARKER, AdvRoom
 from tokenscanner import TokenScanner
 
 ###########################################################################
@@ -154,7 +154,7 @@ class AdvGame:
             prompt.setInput(text, self._synonyms)
 
             # Execute built-in prompt
-            if prompt.execute(current, self._player.getInventory()):
+            if prompt.execute(current, self._player):
                 continue
 
             verb = prompt.getVerb()
@@ -179,6 +179,7 @@ class Prompt:
         self._builtins = {
             "QUIT": self.handleQuit,
             "HELP": self.handleHelp,
+            "ME": self.handleMe,
             "INVENTORY": self.handleInventory,
             "LOOK": self.handleLook,
             "TAKE": self.handleTake,
@@ -208,29 +209,39 @@ class Prompt:
     def isBuiltin(self):
         return self._tokenized["verb"] in self._builtins
 
-    def execute(self, room, inventory):
+    def execute(self, room, player):
         """Routes built-in commands to the right handlers; returns True if handled"""
         verb = self.getVerb()
         if verb in self._builtins:
             handler = self._builtins[verb]
             obj = self.getObj()
-            handler(obj, room, inventory)
+            handler(obj, room, player)
             return True
         return False
 
-    def handleQuit(self, obj, room, inventory):
+    def handleQuit(self, obj, room, player):
         return
 
-    def handleHelp(self, obj, room, inventory):
+    def handleHelp(self, obj, room, player):
         print("\n".join(HELP_TEXT))
 
-    def handleLook(self, obj, room, inventory):
+    def handleLook(self, obj, room, player):
         print(room.getLongDescription())
         if room.getContents():
             for item in room.getContents():
                 print(f"There is {item.getDescription()}.")
 
-    def handleInventory(self, obj, room, inventory):
+    def handleMe(self, obj, room, player):
+        print(f"{player.getName()}: LEVEL {player.getLevel()} @ {player.getPosition()}")
+        print(MARKER)
+        stats = player.getStats()
+        for k, v in stats.items():
+            print(f"{k}: {v}")
+        print(MARKER)
+        self.handleInventory(obj, room, player)
+
+    def handleInventory(self, obj, room, player):
+        inventory = player.getInventory()
         if len(inventory) == 0:
             print("You are empty-handed.")
         else:
@@ -238,24 +249,24 @@ class Prompt:
             for item in inventory:
                 print(f"{item.getDescription()}")
 
-    def handleTake(self, obj, room, inventory):
+    def handleTake(self, obj, room, player):
         if not obj:
             print("Take what?")
             return
         for item in room.getContents():
             if item.getName() == obj:
-                inventory.append(item)
+                player.addItem(item)
                 room.removeObject(item)
                 print("Taken.")
                 return
 
-    def handleDrop(self, obj, room, inventory):
+    def handleDrop(self, obj, room, player):
         if not obj:
             print("Drop what?")
             return
-        for item in inventory:
+        for item in player.getInventory():
             if item.getName() == obj:
-                inventory.remove(item)
+                player.removeItem(item)
                 room.addObject(item)
                 print("Dropped.")
                 return

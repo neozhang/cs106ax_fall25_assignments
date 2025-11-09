@@ -35,6 +35,19 @@ class AdvCharacter:
     def setPosition(self, position):
         """Sets the player's position."""
         self._position = position
+        return self._position
+
+    def getLevel(self):
+        """Returns the player's level."""
+        return self._level
+
+    def getStats(self):
+        """Returns the player's stats."""
+        return self._stats
+
+    def getHealth(self):
+        """Returns the player's health."""
+        return self._position
 
     def getInventory(self):
         """Returns the player's inventory."""
