@@ -166,15 +166,19 @@ class AdvGame:
                             print(f"There is {obj.getDescription()} here.")
                     current.setVisited()
                 npc = self.createNPC(self._player.getLevel(), current.getName())
-                print(f"You encountered a NPC: {npc.getName()}. Fight or Flee?")
+                print(f"You encountered a NPC: {npc.getName()}. FIGHT or FLEE?")
 
             # Get user input
             text = input("> ").strip().upper()
             prompt.setInput(text, self._synonyms)
 
             # Execute built-in prompt
-            if prompt.execute(current, self._player):
-                continue
+            handled, result = prompt.execute(current, self._player)
+            if handled:
+                if result:
+                    continue
+                else:
+                    break
 
             verb = prompt.getVerb()
 
@@ -236,9 +240,8 @@ class Prompt:
         if verb in self._builtins:
             handler = self._builtins[verb]
             obj = self.getObj()
-            handler(obj, room, player)
-            return True
-        return False
+            return True, handler(obj, room, player)
+        return False, None
 
     def handleQuit(self, obj, room, player):
         return
