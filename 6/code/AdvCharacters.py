@@ -11,13 +11,14 @@ DEFENSE_TO_STR = 1
 class AdvCharacter:
     """A class representing a character in the game."""
 
-    def __init__(self, name, level, stats, inventory, position, isAlive):
+    def __init__(self, name, level, stats, inventory, position, isNPC, isAlive):
         self._name = name
         self._level = level
         self._stats = stats
         self._inventory = inventory
         self._position = position
         self._isAlive = isAlive
+        self._isNPC = isNPC
 
     def getName(self):
         """Returns the player's name."""
@@ -66,7 +67,9 @@ class AdvCharacter:
         return item in self._inventory
 
     @staticmethod
-    def createRandomCharacter(position, name="THE ONE", level=1, inventory=[]):
+    def createRandomCharacter(
+        position, name="THE ONE", level=1, isNPC=True, inventory=[]
+    ):
         """Creates a random character at given position."""
         # build stats
         totalCap = level * TOTAL_CAP_TO_LVL  # = str + dex + int
@@ -85,7 +88,7 @@ class AdvCharacter:
             "hit": strength * HIT_TO_STR,
             "defense": strength * DEFENSE_TO_STR,
         }
-        return AdvCharacter(name, level, stats, inventory, position, True)
+        return AdvCharacter(name, level, stats, inventory, position, isNPC, True)
 
     @staticmethod
     def readCharacter(f):

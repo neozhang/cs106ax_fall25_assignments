@@ -49,7 +49,10 @@ class AdvGame:
         """Reads the game data from files with the specified prefix."""
         self._rooms = self.readRooms(prefix)
         self._player = AdvCharacter.createRandomCharacter(
-            self.getFirstRoom().getName(), name="", inventory=self.readObjects(prefix)
+            self.getFirstRoom().getName(),
+            name="",
+            inventory=self.readObjects(prefix),
+            isNPC=False,
         )
         self._synonyms = Synonyms(prefix + "Synonyms.txt")
 
@@ -88,6 +91,12 @@ class AdvGame:
     def getRoomByName(self, name):
         """Returns the AdvRoom object by its name"""
         return self._rooms.get(name)
+
+    def createNPC(self, level, room):
+        """create"""
+        return AdvCharacter.createRandomCharacter(
+            room, name=f"npc_{room}", level=level, inventory=[]
+        )
 
     def readRooms(self, prefix):
         """Reads room data from a file and adds them to the game"""
@@ -148,6 +157,8 @@ class AdvGame:
                         for obj in current.getContents():
                             print(f"There is {obj.getDescription()} here.")
                     current.setVisited()
+                npc = self.createNPC(self._player.getLevel() - 1, current)
+                print(f"You encountered a NPC: {npc.getName()}. Fight or Flee?")
 
             # Get user input
             text = input("> ").strip().upper()
