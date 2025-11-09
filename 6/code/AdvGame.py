@@ -132,6 +132,7 @@ class AdvGame:
                 next = self.getNextRoom(current, "FORCED")
                 if next is not None:
                     current = next
+                    self._player.setPosition(current)
                     print(current.getLongDescription())
                     continue
                 else:  # End of world. Game over. -> EXIT.
@@ -168,6 +169,7 @@ class AdvGame:
                 print("You can't go that way.")
             else:
                 current = next
+                self._player.setPosition(current)
 
 
 class Prompt:

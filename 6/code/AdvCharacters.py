@@ -28,6 +28,14 @@ class AdvCharacter:
         self._name = name
         return self._name
 
+    def getPosition(self):
+        """Returns the player's position."""
+        return self._position
+
+    def setPosition(self, position):
+        """Sets the player's position."""
+        self._position = position
+
     def getInventory(self):
         """Returns the player's inventory."""
         return self._inventory
