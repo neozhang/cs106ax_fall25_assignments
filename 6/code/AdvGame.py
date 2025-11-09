@@ -126,9 +126,10 @@ class AdvGame:
                 if currentObject.getInitialLocation() == "PLAYER":
                     inventory.append(currentObject)
                 else:
-                    self._rooms[currentObject.getInitialLocation()].addObject(
-                        currentObject
-                    )
+                    room = self.getRoomByName(currentObject.getInitialLocation())
+                    if room is not None:
+                        room.addObject(currentObject)
+
         return inventory
 
     def run(self):
