@@ -35,6 +35,7 @@ class AdvObject:
     @staticmethod
     def readObject(f):
         """Reads and returns the next object from the file."""
+        name, description, location = "", "", ""
         line = f.readline().strip()
         if line == "":
             return None
