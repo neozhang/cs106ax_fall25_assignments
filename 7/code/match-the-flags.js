@@ -8,7 +8,8 @@
 function BootstrapMatchTheFlag() {
   let revealedFlagIds = [];
   let matchedFlagsIds = [];
-  let div = document.getElementById("board");
+  let boardDiv = document.getElementById("board");
+  let msgDiv = document.getElementById("message");
 
   /*
    * Function: shuffle
@@ -29,10 +30,9 @@ function BootstrapMatchTheFlag() {
   // initialize the flag array
   function initFlags() {
     let flags = [];
-    const IMGPATH = "images/";
     for (const country of COUNTRIES) {
-      flags.push(IMGPATH + country.toLowerCase() + ".png");
-      flags.push(IMGPATH + country.toLowerCase() + ".png");
+      flags.push(country);
+      flags.push(country);
     }
     shuffle(flags);
     return flags;
@@ -45,9 +45,13 @@ function BootstrapMatchTheFlag() {
       let flagNode = document.createElement("img");
       let flag = flags[i];
       flagNode.setAttribute("src", COVER_IMAGE);
-      flagNode.setAttribute("data-country-image", flag);
+      flagNode.setAttribute("data-country-name", flag);
+      flagNode.setAttribute(
+        "data-country-image",
+        "images/" + flag.toLowerCase() + ".png",
+      );
       flagNode.id = "flag-" + i;
-      div.appendChild(flagNode);
+      boardDiv.appendChild(flagNode);
       flagNode.addEventListener("click", handleImgClick);
     }
   }
@@ -69,30 +73,42 @@ function BootstrapMatchTheFlag() {
         revealedFlagIds.splice(index, 1);
       }
       if (revealedFlagIds.length == 2) {
-        let firstFlag = document.getElementById(revealedFlagIds[0]);
-        let secondFlag = document.getElementById(revealedFlagIds[1]);
-        setTimeout(() => {
-          if (
-            firstFlag.getAttribute("data-country-image") ===
-            secondFlag.getAttribute("data-country-image")
-          ) {
-            firstFlag.setAttribute("src", MATCHED_IMAGE);
-            secondFlag.setAttribute("src", MATCHED_IMAGE);
-            matchedFlagsIds.push([firstFlag.id, secondFlag.id]);
-            if (matchedFlagsIds.length === NUM_COUNTRIES) {
-              textNode = document.createTextNode(
-                "All flags have been matched!",
-              );
-              div.appendChild(textNode);
-            }
-          } else {
-            firstFlag.setAttribute("src", COVER_IMAGE);
-            secondFlag.setAttribute("src", COVER_IMAGE);
-          }
-          revealedFlagIds = [];
-        }, DELAY);
+        setTimeout(handleFlagMatch, DELAY);
       }
     }
+  }
+
+  function handleFlagMatch() {
+    let firstFlag = document.getElementById(revealedFlagIds[0]);
+    let secondFlag = document.getElementById(revealedFlagIds[1]);
+    if (
+      firstFlag.getAttribute("data-country-image") ===
+      secondFlag.getAttribute("data-country-image")
+    ) {
+      firstFlag.setAttribute("src", MATCHED_IMAGE);
+      secondFlag.setAttribute("src", MATCHED_IMAGE);
+      matchedFlagsIds.push([firstFlag.id, secondFlag.id]);
+      if (matchedFlagsIds.length === NUM_COUNTRIES) {
+        updateMessage("All flags are matched!");
+      } else {
+        updateMessage(
+          firstFlag.getAttribute("data-country-name") + " flags are matched!",
+        );
+      }
+    } else {
+      firstFlag.setAttribute("src", COVER_IMAGE);
+      secondFlag.setAttribute("src", COVER_IMAGE);
+    }
+    revealedFlagIds = [];
+  }
+
+  // HELPER: update the message div
+  function updateMessage(msg) {
+    let textNode = document.createTextNode(msg);
+    while (msgDiv.childNodes.length > 0) {
+      msgDiv.removeChild(msgDiv.lastChild);
+    }
+    msgDiv.appendChild(textNode);
   }
 
   // create the flags and start the game

@@ -10,20 +10,29 @@
  *
  */
 body {
-   text-align: center;
+    text-align: center;
 }
 
 /*
  * Dictates the width and height of the primary div where
  * all images are embedded.
  */
-div {
-   outline: 1px;
-   width: 304px;
-   height: 302px;
-   margin: 2px;
-   padding-top: 2px;
-   display: inline-block;
+div#board {
+    outline: 1px;
+    width: 304px;
+    height: 302px;
+    margin: 2px;
+    padding-top: 2px;
+    display: inline-block;
+}
+
+div#message {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    padding: 10px;
+    display: block;
 }
 
 /*
@@ -35,8 +44,8 @@ div {
  * 16 images are laid down in a 4x4 grid.
  */
 img {
-   width: 72px;
-   height: 72px;
-   padding-left: 2px;
-   padding-right: 2px;
+    width: 72px;
+    height: 72px;
+    padding-left: 2px;
+    padding-right: 2px;
 }
