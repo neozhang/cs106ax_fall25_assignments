@@ -6,6 +6,10 @@
 "use strict";
 
 function BootstrapMatchTheFlag() {
+  let revealedFlagIds = [];
+  let matchedFlagsIds = [];
+  let div = document.getElementById("board");
+
   /*
    * Function: shuffle
    * -----------------
@@ -22,6 +26,7 @@ function BootstrapMatchTheFlag() {
     }
   }
 
+  // initialize the flag array
   function initFlags() {
     let flags = [];
     const IMGPATH = "images/";
@@ -35,12 +40,13 @@ function BootstrapMatchTheFlag() {
 
   // creating flags in the div
   function createFlags() {
-    let div = document.getElementById("board");
     let flags = initFlags();
-    for (const flag of flags) {
+    for (let i = 0; i < flags.length; i++) {
       let flagNode = document.createElement("img");
+      let flag = flags[i];
       flagNode.setAttribute("src", COVER_IMAGE);
       flagNode.setAttribute("data-country-image", flag);
+      flagNode.id = "flag-" + i;
       div.appendChild(flagNode);
       flagNode.addEventListener("click", handleImgClick);
     }
@@ -50,13 +56,46 @@ function BootstrapMatchTheFlag() {
   function handleImgClick(e) {
     let node = e.currentTarget;
     let currentImg = node.getAttribute("src");
-    let img =
-      currentImg === COVER_IMAGE
-        ? node.getAttribute("data-country-image")
-        : COVER_IMAGE;
-    node.setAttribute("src", img);
+    let flagImg = node.getAttribute("data-country-image");
+
+    if (revealedFlagIds.length < 2) {
+      if (currentImg === COVER_IMAGE) {
+        node.setAttribute("src", flagImg);
+        revealedFlagIds.push(node.id);
+      } else if (currentImg !== MATCHED_IMAGE) {
+        // then this must be a revealed country flag -> COVER_IMAGE
+        node.setAttribute("src", COVER_IMAGE);
+        let index = revealedFlagIds.indexOf(node.id);
+        revealedFlagIds.splice(index, 1);
+      }
+      if (revealedFlagIds.length == 2) {
+        let firstFlag = document.getElementById(revealedFlagIds[0]);
+        let secondFlag = document.getElementById(revealedFlagIds[1]);
+        setTimeout(() => {
+          if (
+            firstFlag.getAttribute("data-country-image") ===
+            secondFlag.getAttribute("data-country-image")
+          ) {
+            firstFlag.setAttribute("src", MATCHED_IMAGE);
+            secondFlag.setAttribute("src", MATCHED_IMAGE);
+            matchedFlagsIds.push([firstFlag.id, secondFlag.id]);
+            if (matchedFlagsIds.length === NUM_COUNTRIES) {
+              textNode = document.createTextNode(
+                "All flags have been matched!",
+              );
+              div.appendChild(textNode);
+            }
+          } else {
+            firstFlag.setAttribute("src", COVER_IMAGE);
+            secondFlag.setAttribute("src", COVER_IMAGE);
+          }
+          revealedFlagIds = [];
+        }, DELAY);
+      }
+    }
   }
 
+  // create the flags and start the game
   createFlags();
 }
 
