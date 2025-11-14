@@ -32,6 +32,17 @@ function BootstrapMatchTheFlag() {
     shuffle(flags);
     return flags;
   }
+
+  // creating flags in the div
+  function createFlags() {
+    let div = document.getElementById("board");
+    let flags = initFlags();
+    for (const flag of flags) {
+      let flagNode = document.createElement("img");
+      flagNode.setAttribute("src", flag);
+      div.appendChild(flagNode);
+    }
+  }
 }
 
 /* Execute the above function when the DOM tree is fully loaded. */
