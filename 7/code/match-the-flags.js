@@ -24,7 +24,7 @@ function BootstrapMatchTheFlag() {
 
   function initFlags() {
     let flags = [];
-    const IMGPATH = "./images/";
+    const IMGPATH = "images/";
     for (const country of COUNTRIES) {
       flags.push(IMGPATH + country.toLowerCase() + ".png");
       flags.push(IMGPATH + country.toLowerCase() + ".png");
@@ -42,8 +42,22 @@ function BootstrapMatchTheFlag() {
       flagNode.setAttribute("src", COVER_IMAGE);
       flagNode.setAttribute("data-country-image", flag);
       div.appendChild(flagNode);
+      flagNode.addEventListener("click", handleImgClick);
     }
   }
+
+  // handling mouse click events on img nodes
+  function handleImgClick(e) {
+    let node = e.currentTarget;
+    let currentImg = node.getAttribute("src");
+    let img =
+      currentImg === COVER_IMAGE
+        ? node.getAttribute("data-country-image")
+        : COVER_IMAGE;
+    node.setAttribute("src", img);
+  }
+
+  createFlags();
 }
 
 /* Execute the above function when the DOM tree is fully loaded. */
