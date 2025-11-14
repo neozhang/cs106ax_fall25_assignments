@@ -39,7 +39,8 @@ function BootstrapMatchTheFlag() {
     let flags = initFlags();
     for (const flag of flags) {
       let flagNode = document.createElement("img");
-      flagNode.setAttribute("src", flag);
+      flagNode.setAttribute("src", COVER_IMAGE);
+      flagNode.setAttribute("data-country-image", flag);
       div.appendChild(flagNode);
     }
   }
