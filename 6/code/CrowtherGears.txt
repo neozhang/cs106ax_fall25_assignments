@@ -1,0 +1,168 @@
+IRON SWORD
+a sturdy iron sword with a sharp blade
+PLAYER
+-----
+strength: 5
+hit: 15
+
+LEATHER ARMOR
+a suit of worn leather armor
+OutsideBuilding
+-----
+defense: 6
+maxHealth: 10
+
+WIZARD'S STAFF
+a gnarled wooden staff crackling with arcane energy
+DebrisRoom
+-----
+intelligence: 8
+hit: 10
+
+HEALTH POTION
+a glowing vial of crimson liquid
+InsideBuilding
+-----
+health: 25
+maxHealth: 25
+
+IRON HELMET
+a polished iron helmet with a crest
+EndOfRoad
+-----
+defense: 8
+maxHealth: 15
+
+DAGGER
+a small but deadly dagger
+Valley
+-----
+strength: 3
+dexterity: 2
+hit: 8
+
+RING OF WISDOM
+a golden ring inscribed with runes
+PLAYER
+-----
+intelligence: 10
+defense: 3
+
+WOODEN SHIELD
+a sturdy wooden shield reinforced with metal bands
+SlitInRock
+-----
+defense: 10
+maxHealth: 12
+
+SPEED BOOTS
+a pair of enchanted boots that increase movement and reaction time
+OutsideGrate
+-----
+dexterity: 7
+hit: 5
+
+CLOAK OF SHADOWS
+a dark cloak that helps you blend into darkness
+BeneathGrate
+-----
+dexterity: 5
+defense: 4
+
+ANCIENT TOME
+a weathered book filled with forgotten knowledge
+CobbleCrawl
+-----
+intelligence: 12
+maxHealth: 8
+
+STEEL SWORD
+a well-crafted steel sword with excellent balance
+OrangeStoneChamber1
+-----
+strength: 8
+hit: 20
+
+FORTITUDE ELIXIR
+a thick potion that strengthens the body
+Darkness1
+-----
+strength: 6
+maxHealth: 30
+
+MITHRIL ARMOR
+a suit of shimmering armor made of mythical mithril
+SlopingCanyon
+-----
+defense: 15
+maxHealth: 25
+
+CROWN OF INTELLIGENCE
+a jeweled crown that enhances mental faculties
+TopOfPit
+-----
+intelligence: 15
+hit: 5
+defense: 3
+
+BOOTS OF SWIFTNESS
+a pair of leather boots that grant supernatural speed
+HallOfMists
+-----
+dexterity: 10
+hit: 8
+
+MYSTIC AMULET
+a shimmering amulet pulsing with magical energy
+NuggetRoom
+-----
+intelligence: 7
+dexterity: 5
+defense: 5
+
+GREAT AXE
+a massive axe capable of tremendous damage
+EastBankOfFissure
+-----
+strength: 12
+hit: 25
+defense: -2
+
+BASTION PLATE
+a suit of heavy plate armor that provides maximum protection
+WestBankOfFissure
+-----
+defense: 20
+maxHealth: 35
+dexterity: -2
+
+ROGUE'S DAGGER
+a perfectly balanced blade for precision strikes
+HallOfTheMountainKing2
+-----
+dexterity: 12
+hit: 18
+strength: 2
+
+ELIXIR OF VITALITY
+a shimmering potion that restores and enhances life
+EastSideChamber
+-----
+health: 40
+maxHealth: 40
+strength: 3
+
+SCHOLAR'S SPECTACLES
+a pair of enchanted glasses that sharpen the mind
+LongCurvingPassage
+-----
+intelligence: 9
+dexterity: 3
+
+GREATSWORD
+an impressive longsword of legendary craftsmanship
+GiantRoom
+-----
+strength: 10
+hit: 22
+maxHealth: 5

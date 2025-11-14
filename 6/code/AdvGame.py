@@ -7,7 +7,7 @@ necessary to play a game.
 
 from AdvBattles import AdvBattle
 from AdvCharacters import AdvCharacter
-from AdvObject import AdvObject
+from AdvObject import AdvGear, AdvObject
 from AdvRoom import MARKER, AdvRoom
 from tokenscanner import TokenScanner
 
@@ -49,12 +49,15 @@ class AdvGame:
     def __init__(self, prefix):
         """Reads the game data from files with the specified prefix."""
         self._rooms = self.readRooms(prefix)
+        playerGears, npcGears = self.readGears(prefix)
         self._player = AdvCharacter.createRandomCharacter(
             self.getFirstRoom().getName(),
             name="",
             inventory=self.readObjects(prefix),
+            gears=playerGears,
             isNPC=False,
         )
+        self._npcGears = npcGears
         self._synonyms = Synonyms(prefix + "Synonyms.txt")
 
     def getRooms(self):
@@ -132,6 +135,24 @@ class AdvGame:
 
         return inventory
 
+    def readGears(self, prefix):
+        playerGears = []
+        npcGears = []
+        with open(f"{prefix}Gears.txt") as f:
+            while True:
+                currentGear = AdvGear.readGear(f)
+                if currentGear is None:
+                    break
+                if currentGear.getInitialLocation() == "PLAYER":
+                    playerGears.append(currentGear)
+                elif currentGear.getInitialLocation() == "NPC":
+                    npcGears.append(currentGear)
+                else:
+                    room = self.getRoomByName(currentGear.getInitialLocation())
+                    if room is not None:
+                        room.addObject(currentGear)
+        return playerGears, npcGears
+
     def run(self):
         """Plays the adventure game stored in this object."""
         current = self.getFirstRoom()
@@ -204,6 +225,7 @@ class Prompt:
             "HELP": self.handleHelp,
             "ME": self.handleMe,
             "INVENTORY": self.handleInventory,
+            "GEAR": self.handleGears,
             "LOOK": self.handleLook,
             "TAKE": self.handleTake,
             "DROP": self.handleDrop,
@@ -264,6 +286,8 @@ class Prompt:
             print(f"{k}: {v}")
         print(MARKER)
         self.handleInventory(obj, room, player)
+        print(MARKER)
+        self.handleGears(obj, room, player)
         return True
 
     def handleInventory(self, obj, room, player):
@@ -273,6 +297,16 @@ class Prompt:
         else:
             print("You are carrying:")
             for item in inventory:
+                print(f"{item.getDescription()}")
+        return True
+
+    def handleGears(self, obj, room, player):
+        gears = player.getGears()
+        if len(gears) == 0:
+            print("You are not wearing anything.")
+        else:
+            print("You are wearing:")
+            for item in gears:
                 print(f"{item.getDescription()}")
         return True
 

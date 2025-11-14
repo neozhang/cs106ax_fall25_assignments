@@ -17,11 +17,22 @@ MAX_CRIT_CHANCE = 0.2
 class AdvCharacter:
     """A class representing a character in the game."""
 
-    def __init__(self, name: str, level: int, stats: dict, inventory: list, position: str, isNPC: bool, isAlive: bool):
+    def __init__(
+        self,
+        name: str,
+        level: int,
+        stats: dict,
+        inventory: list,
+        gears: list,
+        position: str,
+        isNPC: bool,
+        isAlive: bool,
+    ):
         self._name = name
         self._level = level
         self._stats = stats
         self._inventory = inventory
+        self._gears = gears
         self._position = position
         self._isAlive = isAlive
         self._isNPC = isNPC
@@ -119,6 +130,10 @@ class AdvCharacter:
         """Returns the player's inventory."""
         return self._inventory
 
+    def getGears(self):
+        """Returns the player's gear."""
+        return self._gears
+
     def addItem(self, item):
         """Adds an item to the player's inventory."""
         self._inventory.append(item)
@@ -137,7 +152,7 @@ class AdvCharacter:
 
     @staticmethod
     def createRandomCharacter(
-        position, name="THE ONE", level=1, isNPC=True, inventory=[]
+        position, name="THE ONE", level=1, isNPC=True, inventory=[], gears=[]
     ):
         """Creates a random character at given position."""
         # build stats
@@ -155,10 +170,22 @@ class AdvCharacter:
             "hit": strength * HIT_TO_STR if not isNPC else strength,
             "defense": strength * DEFENSE_TO_STR,
         }
-        return AdvCharacter(name, level, stats, inventory, position, isNPC, True)
+        # adding buffs
+        if gears != []:
+            for gear in gears:
+                buff = gear.getBuff()
+                if buff != []:
+                    stats["health"] += buff.get("health", 0)
+                    stats["maxHealth"] += buff.get("maxHealth", 0)
+                    stats["strength"] += buff.get("strength", 0)
+                    stats["dexterity"] += buff.get("dexterity", 0)
+                    stats["intelligence"] += buff.get("intelligence", 0)
+                    stats["hit"] += buff.get("hit", 0)
+                    stats["defense"] += buff.get("defense", 0)
+        return AdvCharacter(name, level, stats, inventory, gears, position, isNPC, True)
 
     @staticmethod
-    def readCharacter(f):
+    def readCharacter(f):  # TODO: needs to be implemented
         """Reads a character from a file. Only works for NPC."""
         name = f.readline().strip()
         level = int(f.readline().strip())
@@ -169,9 +196,14 @@ class AdvCharacter:
         inventory = []
         for line in f:
             inventory.append(line.strip())
+        gears = []
+        for line in f:
+            gears.append(line.strip())
         position = f.readline().strip()
         isAlive = f.readline().strip() == "True"
-        return AdvCharacter(name, level, stats, inventory, position, True, isAlive)
+        return AdvCharacter(
+            name, level, stats, inventory, gears, position, True, isAlive
+        )
 
 
 def randThreeIntsSum(sum):
