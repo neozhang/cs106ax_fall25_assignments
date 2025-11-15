@@ -174,6 +174,28 @@ class AdvCharacter:
                     else:
                         self._stats[key] = value
 
+    def _applyBuffToBaseStats(self, buff):
+        if not buff:
+            return
+        for key, value in buff.items():
+            current = self._base_stats.get(key, 0)
+            self._base_stats[key] = current + value
+        if "health" in self._base_stats and "maxHealth" in self._base_stats:
+            max_health = self._base_stats["maxHealth"]
+            if max_health is not None:
+                self._base_stats["health"] = max(
+                    0, min(self._base_stats["health"], max_health)
+                )
+
+    def _consumeItem(self, item):
+        self._applyBuffToBaseStats(item.getBuff() if hasattr(item, "getBuff") else None)
+        if hasattr(item, "setEquipped"):
+            item.setEquipped(False)
+        if item in self._items:
+            self.removeItem(item)
+        self.recalculateStats()
+        return True, f"You consume {item.getName()} and feel its effects immediately."
+
     def equip(self, itemName):
         """Equips an item from the inventory, enforcing one item per slot."""
         target = (itemName or "").upper()
@@ -188,6 +210,8 @@ class AdvCharacter:
                     if hasattr(item, "getEquipSlot")
                     else "GENERAL"
                 )
+                if slot == "CONSUMABLE":
+                    return self._consumeItem(item)
                 slot_label = self._formatSlot(slot)
                 conflict = self._findEquippedItemInSlot(slot, exclude=item)
                 if conflict is not None:

@@ -33,3 +33,9 @@ This is a list of tasks to implement a dynamic equipment system where players ca
 - [x] Update `AdvCharacter.equip`/`unequip` to enforce one equipped item per slot and to auto-handle swaps when desired.
 - [x] Improve `AdvPrompt` equip/unequip handlers to provide clearer messaging and streamline successful operations.
 - [x] Retest inventory display and stat recalculation to ensure gear slot restrictions behave correctly.
+
+## Consumable Gear Support
+
+- [x] Detect the `CONSUMABLE` slot when equipping so those items trigger an instant "use" instead of staying equipped.
+- [x] Apply consumable buffs directly to the character's base stats, clamp health to the updated max, and purge the item from the player's inventory.
+- [x] Allow EQUIP to auto-grab consumables from the current room so they are removed from the map before being consumed, and surface a confirmation message to the player.

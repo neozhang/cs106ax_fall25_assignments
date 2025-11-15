@@ -148,6 +148,8 @@ class AdvPrompt:
                     status = " (equipped)" if item.isEquipped() else ""
                     print(f"- {item.getName()} [{slot}]{status}")
             return True
+        if not player.hasItem(obj):
+            self._pickupConsumableFromRoom(obj, room, player)
         _, message = player.equip(obj)
         print(message)
         return True
@@ -180,6 +182,21 @@ class AdvPrompt:
         if not slot:
             return "General"
         return slot.replace("_", " ").title()
+
+    def _pickupConsumableFromRoom(self, obj_name, room, player):
+        target = (obj_name or "").upper()
+        for item in list(room.getContents()):
+            if item.getName().upper() == target and self._isConsumable(item):
+                player.addItem(item)
+                room.removeObject(item)
+                return True
+        return False
+
+    def _isConsumable(self, item):
+        slot = item.getEquipSlot() if hasattr(item, "getEquipSlot") else None
+        if slot is None:
+            return False
+        return slot.strip().upper() == "CONSUMABLE"
 
 
 class AdvSynonyms:

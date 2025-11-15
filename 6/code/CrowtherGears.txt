@@ -28,7 +28,6 @@ CONSUMABLE
 InsideBuilding
 -----
 health: 25
-maxHealth: 25
 
 IRON HELMET
 a polished iron helmet with a crest
