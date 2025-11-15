@@ -1,7 +1,6 @@
 from math import sqrt
 
-EXP_TO_LVL = 100
-EXP_SQRT_MULTI = 10
+from AdvConstants import BATTLE as B
 
 
 class AdvBattle:
@@ -83,7 +82,7 @@ class AdvBattle:
 
     def processReward(self):
         """Returns the experience points gained from the battle."""
-        exp = sqrt(self._npc.getLevel() * EXP_TO_LVL) * EXP_SQRT_MULTI
+        exp = sqrt(self._npc.getLevel() * B["EXP_TO_LVL"]) * B["EXP_SQRT_MULTI"]
         return self._player.setExperience(self._player.getExperience() + exp)
 
     def fight(self):

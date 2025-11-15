@@ -2,10 +2,10 @@
 # ------------------
 # This program plays the CS 106AX Adventure game.
 
+from AdvConstants import ADVENTURE_PREFIX
 from AdvGame import AdvGame
 
 # Constants
-ADVENTURE_PREFIX = "Crowther"
 
 
 # Main program

@@ -5,11 +5,11 @@ This module defines the AdvGame class, which records the information
 necessary to play a game.
 """
 
-from AdvBattles import AdvBattle
 from AdvCharacters import AdvCharacter
+from AdvConstants import WILDCARD
 from AdvObject import AdvGear, AdvObject
-from AdvRoom import MARKER, AdvRoom
-from tokenscanner import TokenScanner
+from AdvPrompt import AdvPrompt, AdvSynonyms
+from AdvRoom import AdvRoom
 
 ###########################################################################
 # Your job in this assignment is to fill in the definitions of the        #
@@ -19,30 +19,6 @@ from tokenscanner import TokenScanner
 # amount of code you need to add is large enough that decomposing it      #
 # into helper methods will be essential.                                  #
 ###########################################################################
-
-# Constants
-HELP_TEXT = [
-    "Welcome to Adventure!",
-    "Somewhere nearby is Colossal Cave, where others have found fortunes in",
-    "treasure and gold, though it is rumored that some who enter are never",
-    "seen again.  Magic is said to work in the cave.  I will be your eyes",
-    "and hands.  Direct me with natural English commands; I don't understand",
-    "all of the English language, but I do a pretty good job.",
-    "",
-    "It's important to remember that cave passages turn a lot, and that",
-    "leaving a room to the north does not guarantee entering the next from",
-    "the south, although it often works out that way.  You'd best make",
-    "yourself a map as you go along.",
-    "",
-    "Much of my vocabulary describes places and is used to move you there.",
-    "To move, try words like IN, OUT, EAST, WEST, NORTH, SOUTH, UP, or DOWN.",
-    "I also know about a number of objects hidden within the cave which you",
-    "can TAKE or DROP.  To see what objects you're carrying, say INVENTORY.",
-    "To reprint the detailed description of where you are, say LOOK.  If you",
-    "want to end your adventure, say QUIT.",
-]
-
-WILDCARD = "*"
 
 
 class AdvGame:
@@ -58,7 +34,7 @@ class AdvGame:
             isNPC=False,
         )
         self._npcGears = npcGears
-        self._synonyms = Synonyms(prefix + "Synonyms.txt")
+        self._synonyms = AdvSynonyms(prefix + "Synonyms.txt")
 
     def getRooms(self):
         """Returns the map of rooms"""
@@ -162,7 +138,7 @@ class AdvGame:
         playerName = input("> ").strip().upper()
         self._player.setName(playerName)
 
-        prompt = Prompt()
+        prompt = AdvPrompt()
 
         while prompt.getVerb() != "QUIT":
             # Handle forced passage
@@ -214,154 +190,3 @@ class AdvGame:
             else:
                 current = next
                 self._player.setPosition(current.getName())
-
-
-class Prompt:
-    """A class representing a prompt, handles user input and executes built-in commands."""
-
-    def __init__(self, input=""):
-        self._builtins = {
-            "QUIT": self.handleQuit,
-            "HELP": self.handleHelp,
-            "ME": self.handleMe,
-            "INVENTORY": self.handleInventory,
-            "GEAR": self.handleGears,
-            "LOOK": self.handleLook,
-            "TAKE": self.handleTake,
-            "DROP": self.handleDrop,
-            "FIGHT": self.handleFight,
-        }
-        self.setInput(input)
-
-    def getVerb(self):
-        return self._tokenized["verb"]
-
-    def getObj(self):
-        return self._tokenized["obj"]
-
-    def setInput(self, input, synonyms=None):
-        """Sets the input for the prompt."""
-        self._raw = input
-        self._tokenized = {}
-        scanner = TokenScanner(input)
-        verb = scanner.nextToken().strip().upper() if scanner.hasMoreTokens() else None
-        if synonyms is not None and verb in synonyms.getSynonyms():
-            verb = synonyms.getSynonym(verb)
-        self._tokenized["verb"] = verb
-        self._tokenized["obj"] = ""
-        while scanner.hasMoreTokens():
-            self._tokenized["obj"] += scanner.nextToken().strip().upper()
-
-    def isBuiltin(self):
-        return self._tokenized["verb"] in self._builtins
-
-    def execute(self, room, player):
-        """Routes built-in commands to the right handlers; returns True if handled"""
-        verb = self.getVerb()
-        if verb in self._builtins:
-            handler = self._builtins[verb]
-            obj = self.getObj()
-            return True, handler(obj, room, player)
-        return False, None
-
-    def handleQuit(self, obj, room, player):
-        return
-
-    def handleHelp(self, obj, room, player):
-        print("\n".join(HELP_TEXT))
-        return True
-
-    def handleLook(self, obj, room, player):
-        print(room.getLongDescription())
-        if room.getContents():
-            for item in room.getContents():
-                print(f"There is {item.getDescription()}.")
-        return True
-
-    def handleMe(self, obj, room, player):
-        print(f"{player.getName()}: LEVEL {player.getLevel()} @ {player.getPosition()}")
-        print(MARKER)
-        stats = player.getStats()
-        for k, v in stats.items():
-            print(f"{k}: {v}")
-        print(MARKER)
-        self.handleInventory(obj, room, player)
-        print(MARKER)
-        self.handleGears(obj, room, player)
-        return True
-
-    def handleInventory(self, obj, room, player):
-        inventory = player.getInventory()
-        if len(inventory) == 0:
-            print("You are empty-handed.")
-        else:
-            print("You are carrying:")
-            for item in inventory:
-                print(f"{item.getDescription()}")
-        return True
-
-    def handleGears(self, obj, room, player):
-        gears = player.getGears()
-        if len(gears) == 0:
-            print("You are not wearing anything.")
-        else:
-            print("You are wearing:")
-            for item in gears:
-                print(f"{item.getDescription()}")
-        return True
-
-    def handleTake(self, obj, room, player):
-        if not obj:
-            print("Take what?")
-            return True
-        for item in room.getContents():
-            if item.getName() == obj:
-                player.addItem(item)
-                room.removeObject(item)
-                print("Taken.")
-                return True
-
-    def handleDrop(self, obj, room, player):
-        if not obj:
-            print("Drop what?")
-            return True
-        for item in player.getInventory():
-            if item.getName() == obj:
-                player.removeItem(item)
-                room.addObject(item)
-                print("Dropped.")
-                return True
-
-    def handleFight(self, obj, room, player):
-        npc = room.getNpcs()[-1]
-        battle = AdvBattle(player, npc)
-        return battle.fight()
-
-
-class Synonyms:
-    """A class representing a set of synonyms for words."""
-
-    def __init__(self, filename):
-        self._synonyms = {}
-        try:
-            with open(filename, "r") as f:
-                for line in f:
-                    words = line.strip().split("=")
-                    if len(words) > 1:
-                        self._synonyms[words[0].strip().upper()] = (
-                            words[1].strip().upper()
-                        )
-        except FileNotFoundError:
-            self._synonyms = {}
-
-    def getSynonym(self, word):
-        """Returns the synonym for the given word."""
-        return self._synonyms.get(word)
-
-    def getSynonyms(self):
-        """Returns a dictionary of synonyms."""
-        return self._synonyms
-
-    def isSynonym(self, word):
-        """Returns True if the given word is a synonym."""
-        return word in self._synonyms

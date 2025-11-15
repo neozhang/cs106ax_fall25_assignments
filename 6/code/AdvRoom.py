@@ -14,9 +14,7 @@ This module is responsible for modeling a single room in Adventure.
 # it with a getPassages method that returns the dictionary of passages.   #
 ###########################################################################
 
-# Constants
-
-MARKER = "-----"
+from AdvConstants import MARKER
 
 
 class AdvRoom:

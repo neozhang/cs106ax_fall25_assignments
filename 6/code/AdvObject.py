@@ -12,7 +12,7 @@ This module defines a class that models an object in Adventure.
 # the ones defined in this starter file.                                  #
 ###########################################################################
 
-MARKER = "-----"
+from AdvConstants import MARKER
 
 
 class AdvObject:

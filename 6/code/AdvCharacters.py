@@ -1,17 +1,6 @@
 import random
 
-# Constants
-PT_TO_LVL = 30
-PT_PER_LEVEL = 5
-MAXHEALTH_TO_LVL = 80
-MAXHEALTH_TO_STR = 2
-HIT_TO_STR = 3
-DEFENSE_TO_STR = 1.2
-LEVEL_BASE = 100
-LEVEL_POWER = 1.5
-BASE_CRIT_MULTIPLIER = 1.5
-MAX_DEX_BONUS = 5.0
-MAX_CRIT_CHANCE = 0.2
+from AdvConstants import CHARACTER as C
 
 
 class AdvCharacter:
@@ -64,12 +53,14 @@ class AdvCharacter:
         # increment level
         self._level += 1
         # distribute stat points for this one level-up
-        s, d, i = randThreeIntsSum(PT_PER_LEVEL)
+        s, d, i = randThreeIntsSum(C["PT_PER_LEVEL"])
         strength = self.getStats()["strength"] + s
         dexterity = self.getStats()["dexterity"] + d
         intelligence = self.getStats()["intelligence"] + i
         # recalc health (keeps the original per-level constant behavior)
-        maxHealth = strength * MAXHEALTH_TO_STR + self._level * MAXHEALTH_TO_LVL
+        maxHealth = (
+            strength * C["MAXHEALTH_TO_STR"] + self._level * C["MAXHEALTH_TO_LVL"]
+        )
         health = maxHealth
         # preserve existing experience (we do level-subtraction in setExperience)
         experience = self._stats.get("experience")
@@ -81,8 +72,8 @@ class AdvCharacter:
             "dexterity": dexterity,
             "intelligence": intelligence,
             "experience": experience,
-            "hit": strength * HIT_TO_STR,
-            "defense": strength * DEFENSE_TO_STR,
+            "hit": strength * C["HIT_TO_STR"],
+            "defense": strength * C["DEFENSE_TO_STR"],
         }
 
     def getStats(self):
@@ -106,7 +97,9 @@ class AdvCharacter:
         leveled = False
         # repeatedly level up while remaining XP meets the per-level cost for the next level
         while True:
-            nextLevelThreshold = int(LEVEL_BASE * (self.getLevel() + 1) ** LEVEL_POWER)
+            nextLevelThreshold = int(
+                C["LEVEL_BASE"] * (self.getLevel() + 1) ** C["LEVEL_POWER"]
+            )
             if experience >= nextLevelThreshold:
                 # consume the XP cost for this level and perform one level-up
                 experience -= nextLevelThreshold
@@ -120,10 +113,10 @@ class AdvCharacter:
         return leveled
 
     def getCritMultiplier(self):
-        critChance = min(self._stats["intelligence"] / 100, MAX_CRIT_CHANCE)
-        dexBonus = min(self._stats["dexterity"] / 100, MAX_DEX_BONUS)
+        critChance = min(self._stats["intelligence"] / 100, C["MAX_CRIT_CHANCE"])
+        dexBonus = min(self._stats["dexterity"] / 100, C["MAX_DEX_BONUS"])
         if random.random() < critChance:
-            return BASE_CRIT_MULTIPLIER + dexBonus
+            return C["BASE_CRIT_MULTIPLIER"] + dexBonus
         return 1.0
 
     def getInventory(self):
@@ -156,9 +149,9 @@ class AdvCharacter:
     ):
         """Creates a random character at given position."""
         # build stats
-        p = level * PT_TO_LVL  # = str + dex + int
+        p = level * C["PT_TO_LVL"]  # = str + dex + int
         strength, dexterity, intelligence = randThreeIntsSum(p)
-        maxHealth = strength * MAXHEALTH_TO_STR + level * MAXHEALTH_TO_LVL
+        maxHealth = strength * C["MAXHEALTH_TO_STR"] + level * C["MAXHEALTH_TO_LVL"]
         health = maxHealth
         stats = {
             "health": health,
@@ -167,8 +160,8 @@ class AdvCharacter:
             "dexterity": dexterity,
             "intelligence": intelligence,
             "experience": 0,
-            "hit": strength * HIT_TO_STR if not isNPC else strength,
-            "defense": strength * DEFENSE_TO_STR,
+            "hit": strength * C["HIT_TO_STR"] if not isNPC else strength,
+            "defense": strength * C["DEFENSE_TO_STR"],
         }
         # adding buffs
         if gears != []:
