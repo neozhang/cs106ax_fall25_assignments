@@ -25,12 +25,13 @@ class AdvGame:
     def __init__(self, prefix):
         """Reads the game data from files with the specified prefix."""
         self._rooms = self.readRooms(prefix)
+        playerInventory = self.readObjects(prefix)
         playerGears, npcGears = self.readGears(prefix)
+        playerItems = playerInventory + playerGears
         self._player = AdvCharacter.createRandomCharacter(
             self.getFirstRoom().getName(),
             name="",
-            inventory=self.readObjects(prefix),
-            gears=playerGears,
+            items=playerItems,
             isNPC=False,
         )
         self._npcGears = npcGears
@@ -53,7 +54,7 @@ class AdvGame:
         # If passage has an object-specific destination, prefer it when player has object.
         if "objDest" in passage:
             required_obj = passage.get("obj")
-            for item in self._player.getInventory():
+            for item in self._player.getItems():
                 if item.getName() == required_obj:
                     dest = passage.get("objDest")
                     break
@@ -77,7 +78,7 @@ class AdvGame:
         room = self.getRoomByName(roomName)
         if room is not None:
             npc = AdvCharacter.createRandomCharacter(
-                roomName, name=f"npc_{roomName}", level=level, inventory=[]
+                roomName, name=f"npc_{roomName}", level=level, items=[]
             )
             room.addNpc(npc)
             return npc
@@ -161,7 +162,7 @@ class AdvGame:
                     if len(current.getContents()) > 0:
                         for obj in current.getContents():
                             print(
-                                f"There is {obj.getDescription()}[{obj.getName()}] here."
+                                f"There is {obj.getDescription()} [{obj.getName()}] here."
                             )
                     current.setVisited()
                 npc = self.createNPC(self._player.getLevel(), current.getName())

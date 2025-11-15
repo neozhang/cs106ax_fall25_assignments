@@ -59,9 +59,24 @@ class AdvGear(AdvObject):
     def __init__(self, name, description, location, buff):
         super().__init__(name, description, location)
         self._buff = buff
+        self._is_equipped = False
+        self._is_equippable = True
+        self._equip_slot = "GENERAL"
 
     def getBuff(self):
         return self._buff
+
+    def isEquipped(self):
+        return self._is_equipped
+
+    def setEquipped(self, state):
+        self._is_equipped = state
+
+    def isEquippable(self):
+        return self._is_equippable
+
+    def getEquipSlot(self):
+        return self._equip_slot
 
     @staticmethod
     def readGear(f):

@@ -12,11 +12,12 @@ class AdvPrompt:
             "HELP": self.handleHelp,
             "ME": self.handleMe,
             "INVENTORY": self.handleInventory,
-            "GEAR": self.handleGears,
             "LOOK": self.handleLook,
             "TAKE": self.handleTake,
             "DROP": self.handleDrop,
             "FIGHT": self.handleFight,
+            "EQUIP": self.handleEquip,
+            "UNEQUIP": self.handleUnequip,
         }
         self.setInput(input)
 
@@ -35,9 +36,14 @@ class AdvPrompt:
         if synonyms is not None and verb in synonyms.getSynonyms():
             verb = synonyms.getSynonym(verb)
         self._tokenized["verb"] = verb
-        self._tokenized["obj"] = ""
+
+        # Reconstruct the object string from remaining tokens and normalize whitespace
+        obj_parts = []
         while scanner.hasMoreTokens():
-            self._tokenized["obj"] += scanner.nextToken().strip().upper()
+            obj_parts.append(scanner.nextToken())
+        obj_string = "".join(obj_parts).strip().upper()
+        self._tokenized["obj"] = " ".join(obj_string.split())
+        print(f"OBJ = {self._tokenized['obj']}")
 
     def isBuiltin(self):
         return self._tokenized["verb"] in self._builtins
@@ -62,7 +68,7 @@ class AdvPrompt:
         print(room.getLongDescription())
         if room.getContents():
             for item in room.getContents():
-                print(f"There is {item.getDescription()}.")
+                print(f"There is {item.getDescription()} [{item.getName()}] here.")
         return True
 
     def handleMe(self, obj, room, player):
@@ -73,28 +79,19 @@ class AdvPrompt:
             print(f"{k}: {v}")
         print(MARKER)
         self.handleInventory(obj, room, player)
-        print(MARKER)
-        self.handleGears(obj, room, player)
         return True
 
     def handleInventory(self, obj, room, player):
-        inventory = player.getInventory()
-        if len(inventory) == 0:
+        items = player.getItems()
+        if len(items) == 0:
             print("You are empty-handed.")
         else:
             print("You are carrying:")
-            for item in inventory:
-                print(f"{item.getDescription()}")
-        return True
-
-    def handleGears(self, obj, room, player):
-        gears = player.getGears()
-        if len(gears) == 0:
-            print("You are not wearing anything.")
-        else:
-            print("You are wearing:")
-            for item in gears:
-                print(f"{item.getDescription()}")
+            for item in items:
+                description = item.getDescription()
+                if hasattr(item, "isEquipped") and item.isEquipped():
+                    description += " (equipped)"
+                print(description)
         return True
 
     def handleTake(self, obj, room, player):
@@ -102,27 +99,50 @@ class AdvPrompt:
             print("Take what?")
             return True
         for item in room.getContents():
-            if item.getName() == obj:
+            if item.getName().upper() == obj.upper():
                 player.addItem(item)
                 room.removeObject(item)
                 print("Taken.")
                 return True
+        print("You don't see that here.")
+        return True
 
     def handleDrop(self, obj, room, player):
         if not obj:
             print("Drop what?")
             return True
-        for item in player.getInventory():
-            if item.getName() == obj:
+        for item in player.getItems():
+            if item.getName().upper() == obj.upper():
+                if hasattr(item, "isEquipped") and item.isEquipped():
+                    print("You can't drop an equipped item.")
+                    return True
                 player.removeItem(item)
                 room.addObject(item)
                 print("Dropped.")
                 return True
+        print("You don't have that.")
+        return True
 
     def handleFight(self, obj, room, player):
         npc = room.getNpcs()[-1]
         battle = AdvBattle(player, npc)
         return battle.fight()
+
+    def handleEquip(self, obj, room, player):
+        if not obj:
+            print("Equip what?")
+            return True
+        result = player.equip(obj)
+        print(result)
+        return True
+
+    def handleUnequip(self, obj, room, player):
+        if not obj:
+            print("Unequip what?")
+            return True
+        result = player.unequip(obj)
+        print(result)
+        return True
 
 
 class AdvSynonyms:

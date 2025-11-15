@@ -11,17 +11,17 @@ class AdvCharacter:
         name: str,
         level: int,
         stats: dict,
-        inventory: list,
-        gears: list,
+        items: list,
         position: str,
         isNPC: bool,
         isAlive: bool,
     ):
         self._name = name
         self._level = level
-        self._stats = stats
-        self._inventory = inventory
-        self._gears = gears
+        self._base_stats = stats
+        self._stats = None
+        self._items = items
+        self.recalculateStats()
         self._position = position
         self._isAlive = isAlive
         self._isNPC = isNPC
@@ -54,27 +54,20 @@ class AdvCharacter:
         self._level += 1
         # distribute stat points for this one level-up
         s, d, i = randThreeIntsSum(C["PT_PER_LEVEL"])
-        strength = self.getStats()["strength"] + s
-        dexterity = self.getStats()["dexterity"] + d
-        intelligence = self.getStats()["intelligence"] + i
+        self._base_stats["strength"] += s
+        self._base_stats["dexterity"] += d
+        self._base_stats["intelligence"] += i
         # recalc health (keeps the original per-level constant behavior)
-        maxHealth = (
-            strength * C["MAXHEALTH_TO_STR"] + self._level * C["MAXHEALTH_TO_LVL"]
+        self._base_stats["maxHealth"] = (
+            self._base_stats["strength"] * C["MAXHEALTH_TO_STR"]
+            + self._level * C["MAXHEALTH_TO_LVL"]
         )
-        health = maxHealth
-        # preserve existing experience (we do level-subtraction in setExperience)
-        experience = self._stats.get("experience")
-        # update stats in-place
-        self._stats = {
-            "health": health,
-            "maxHealth": maxHealth,
-            "strength": strength,
-            "dexterity": dexterity,
-            "intelligence": intelligence,
-            "experience": experience,
-            "hit": strength * C["HIT_TO_STR"],
-            "defense": strength * C["DEFENSE_TO_STR"],
-        }
+        self._base_stats["health"] = self._base_stats["maxHealth"]
+        # update derived stats in base_stats
+        self._base_stats["hit"] = self._base_stats["strength"] * C["HIT_TO_STR"]
+        self._base_stats["defense"] = self._base_stats["strength"] * C["DEFENSE_TO_STR"]
+
+        self.recalculateStats()
 
     def getStats(self):
         """Returns the player's stats."""
@@ -86,7 +79,7 @@ class AdvCharacter:
 
     def getExperience(self):
         """Returns the player's experience."""
-        return self._stats["experience"]
+        return self._base_stats["experience"]
 
     def setExperience(self, experience: int):
         """Sets the player's experience as remaining XP. Each level-up reduces XP by the per-level threshold.
@@ -109,7 +102,9 @@ class AdvCharacter:
                 continue
             break
         # store the remaining XP
-        self._stats["experience"] = experience
+        self._base_stats["experience"] = experience
+        if leveled:
+            self.recalculateStats()  # Recalculate stats in case level up happened
         return leveled
 
     def getCritMultiplier(self):
@@ -119,41 +114,85 @@ class AdvCharacter:
             return C["BASE_CRIT_MULTIPLIER"] + dexBonus
         return 1.0
 
-    def getInventory(self):
-        """Returns the player's inventory."""
-        return self._inventory
+    def getItems(self):
+        """Returns the player's items."""
+        return self._items
 
-    def getGears(self):
-        """Returns the player's gear."""
-        return self._gears
+    def getEquippedItems(self):
+        """Returns a list of equipped items."""
+        return [
+            item
+            for item in self._items
+            if hasattr(item, "isEquipped") and item.isEquipped()
+        ]
 
     def addItem(self, item):
         """Adds an item to the player's inventory."""
-        self._inventory.append(item)
+        self._items.append(item)
 
     def removeItem(self, item):
         """Removes an item from the player's inventory."""
-        self._inventory.remove(item)
+        self._items.remove(item)
 
-    def hasItem(self, item):
+    def hasItem(self, itemName):
         """Returns True if the player has the given item."""
-        return item in self._inventory
+        for item in self._items:
+            if item.getName().upper() == itemName.upper():
+                return True
+        return False
+
+    def recalculateStats(self):
+        """Recalculates stats by applying buffs from equipped items to base stats."""
+        self._stats = self._base_stats.copy()
+        for item in self.getEquippedItems():
+            buff = item.getBuff()
+            if buff:
+                for key, value in buff.items():
+                    if key in self._stats:
+                        self._stats[key] += value
+                    else:
+                        self._stats[key] = value
+
+    def equip(self, itemName):
+        """Equips an item from the inventory."""
+        for item in self._items:
+            if item.getName().upper() == itemName.upper():
+                if hasattr(item, "isEquippable") and item.isEquippable():
+                    if not item.isEquipped():
+                        item.setEquipped(True)
+                        self.recalculateStats()
+                        return f"{item.getName()} equipped."
+                    else:
+                        return f"{item.getName()} is already equipped."
+                else:
+                    return f"You can't equip {item.getName()}."
+        return f"You don't have {itemName}."
+
+    def unequip(self, itemName):
+        """Unequips an item."""
+        for item in self._items:
+            if item.getName().upper() == itemName.upper():
+                if hasattr(item, "isEquipped") and item.isEquipped():
+                    item.setEquipped(False)
+                    self.recalculateStats()
+                    return f"{item.getName()} unequipped."
+                else:
+                    return f"{item.getName()} is not equipped."
+        return f"You don't have {itemName}."
 
     def isAlive(self):
         """Returns True if the player is alive"""
         return self._isAlive
 
     @staticmethod
-    def createRandomCharacter(
-        position, name="THE ONE", level=1, isNPC=True, inventory=[], gears=[]
-    ):
+    def createRandomCharacter(position, name="THE ONE", level=1, isNPC=True, items=[]):
         """Creates a random character at given position."""
         # build stats
         p = level * C["PT_TO_LVL"]  # = str + dex + int
         strength, dexterity, intelligence = randThreeIntsSum(p)
         maxHealth = strength * C["MAXHEALTH_TO_STR"] + level * C["MAXHEALTH_TO_LVL"]
         health = maxHealth
-        stats = {
+        base_stats = {
             "health": health,
             "maxHealth": maxHealth,
             "strength": strength,
@@ -163,40 +202,39 @@ class AdvCharacter:
             "hit": strength * C["HIT_TO_STR"] if not isNPC else strength,
             "defense": strength * C["DEFENSE_TO_STR"],
         }
-        # adding buffs
-        if gears != []:
-            for gear in gears:
-                buff = gear.getBuff()
-                if buff != []:
-                    stats["health"] += buff.get("health", 0)
-                    stats["maxHealth"] += buff.get("maxHealth", 0)
-                    stats["strength"] += buff.get("strength", 0)
-                    stats["dexterity"] += buff.get("dexterity", 0)
-                    stats["intelligence"] += buff.get("intelligence", 0)
-                    stats["hit"] += buff.get("hit", 0)
-                    stats["defense"] += buff.get("defense", 0)
-        return AdvCharacter(name, level, stats, inventory, gears, position, isNPC, True)
+
+        # Equip any equippable items passed in
+        for item in items:
+            if hasattr(item, "isEquippable") and item.isEquippable():
+                item.setEquipped(True)
+
+        return AdvCharacter(name, level, base_stats, items, position, isNPC, True)
 
     @staticmethod
     def readCharacter(f):  # TODO: needs to be implemented
         """Reads a character from a file. Only works for NPC."""
         name = f.readline().strip()
+        if name == "":
+            return None
         level = int(f.readline().strip())
         stats = {}
-        for line in f:
+        while True:
+            line = f.readline().strip()
+            if line == "":
+                break
             key, value = line.strip().split(":")
             stats[key] = int(value)
-        inventory = []
-        for line in f:
-            inventory.append(line.strip())
-        gears = []
-        for line in f:
-            gears.append(line.strip())
+
+        items = []
+        while True:
+            line = f.readline().strip()
+            if line == "":
+                break
+            items.append(line.strip())  # This should be creating AdvObjects
+
         position = f.readline().strip()
         isAlive = f.readline().strip() == "True"
-        return AdvCharacter(
-            name, level, stats, inventory, gears, position, True, isAlive
-        )
+        return AdvCharacter(name, level, stats, items, position, True, isAlive)
 
 
 def randThreeIntsSum(sum):
