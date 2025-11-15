@@ -1,6 +1,6 @@
 from math import sqrt
 
-from AdvConstants import BATTLE as B
+from AdvConstant import BATTLE as B
 
 
 class AdvBattle:

@@ -1,5 +1,3 @@
-# File: AdvObject.js
-
 """
 This module defines a class that models an object in Adventure.
 """
@@ -12,7 +10,7 @@ This module defines a class that models an object in Adventure.
 # the ones defined in this starter file.                                  #
 ###########################################################################
 
-from AdvConstants import MARKER
+from AdvConstant import MARKER
 
 
 class AdvObject:

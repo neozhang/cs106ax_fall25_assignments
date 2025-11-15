@@ -27,7 +27,7 @@ HELP_TEXT = [
 
 WILDCARD = "*"
 
-MARKER = "------"
+MARKER = "-----"
 
 # CHARACTER
 

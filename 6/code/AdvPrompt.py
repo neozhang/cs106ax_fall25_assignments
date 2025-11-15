@@ -1,5 +1,5 @@
-from AdvBattles import AdvBattle
-from AdvConstants import HELP_TEXT, MARKER
+from AdvBattle import AdvBattle
+from AdvConstant import HELP_TEXT, MARKER
 from tokenscanner import TokenScanner
 
 

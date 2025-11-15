@@ -1,6 +1,6 @@
 import random
 
-from AdvConstants import CHARACTER as C
+from AdvConstant import CHARACTER as C
 
 
 class AdvCharacter:

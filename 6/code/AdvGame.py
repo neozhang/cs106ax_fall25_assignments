@@ -5,8 +5,8 @@ This module defines the AdvGame class, which records the information
 necessary to play a game.
 """
 
-from AdvCharacters import AdvCharacter
-from AdvConstants import WILDCARD
+from AdvCharacter import AdvCharacter
+from AdvConstant import WILDCARD
 from AdvObject import AdvGear, AdvObject
 from AdvPrompt import AdvPrompt, AdvSynonyms
 from AdvRoom import AdvRoom
@@ -160,7 +160,9 @@ class AdvGame:
                     print(current.getLongDescription())
                     if len(current.getContents()) > 0:
                         for obj in current.getContents():
-                            print(f"There is {obj.getDescription()} here.")
+                            print(
+                                f"There is {obj.getDescription()}[{obj.getName()}] here."
+                            )
                     current.setVisited()
                 npc = self.createNPC(self._player.getLevel(), current.getName())
                 print(f"You encountered a NPC: {npc.getName()}. FIGHT?")
