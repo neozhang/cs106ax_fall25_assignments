@@ -1,10 +1,47 @@
-**Contest Enhancements**
+# Adventure Game Enhancements
 
-- Player state is now managed by a full `AdvCharacter` model with stat growth and XP tracking instead of the `main` branch’s bare `_inventory` list (`main:6/code/AdvGame.py:18`). Level ups distribute random strength/dexterity/intelligence points, refresh derived hit/defense, and recompute max health (`6/code/AdvCharacter.py:51`). Experience is stored and consumed per threshold and can trigger multiple level gains (`6/code/AdvCharacter.py:84`), while battles feed XP back through `AdvBattle.processReward` (`6/code/AdvBattle.py:83`).
-- The gear/equipment system adds a dedicated `AdvGear` subclass with slot metadata, buffs, and equip flags (`6/code/AdvObject.py:58`) plus a new `CrowtherGears.txt` data file so both the player and rooms spawn with typed items (`6/code/CrowtherGears.txt:1`). Characters recalculate stats from equipped buffs (`6/code/AdvCharacter.py:165`), enforce one item per slot via `equip/unequip` (`6/code/AdvCharacter.py:177`), and the prompt exposes EQUIP/UNEQUIP UX that lists slots and prevents dropping equipped gear (`6/code/AdvPrompt.py:137`; `6/code/AdvPrompt.py:116`).
-- Consumable gear now treats EQUIP as “use”: the prompt will auto-grab potions from the room, apply their buffs directly to the character’s base stats, clamp health to the new max, and immediately remove the item from play while messaging the player (`6/code/AdvCharacter.py:165`; `6/code/AdvPrompt.py:137`).
-- Contest gameplay introduces NPC encounters per room visit (`6/code/AdvGame.py:166`), persisting them on the room via the new `_npcs` collection (`6/code/AdvRoom.py:20`). A dedicated battle engine resolves FIGHT commands with turn order, defense-based damage reduction, and critical hits derived from character stats (`6/code/AdvBattle.py:19`). `AdvPrompt.handleFight` bridges the two, returning the battle outcome to the main loop (`6/code/AdvPrompt.py:132`).
-- The Prompt/command layer was extracted into `AdvPrompt`, extending the basic verbs from main (`main:6/code/AdvGame.py:146`) with `ME` status inspection, richer inventory readouts that show slots and equip state (`6/code/AdvPrompt.py:73`; `6/code/AdvPrompt.py:83`), and synonym-aware parsing that now returns both “handled” and “should continue” signals to the loop (`6/code/AdvPrompt.py:10`; `6/code/AdvPrompt.py:50`). This modular prompt replaces the inline class in `AdvGame` and makes room for future commands.
-- Shared constants (game prefix, help text, wildcard marker, character/battle tuning numbers) moved into `AdvConstant` for reuse (`6/code/AdvConstant.py:3`), so `Adventure` simply imports the configured prefix (`6/code/Adventure.py:5`) and other modules pull `MARKER` instead of hardcoding delimiter strings (`6/code/AdvRoom.py:17`). The added `TODO.md` documents further plans for dynamic equipment behavior (`6/code/TODO.md:1`).
+This version of the Adventure game builds upon the original implementation with significant new systems for character progression, equipment management, combat, and a refactored command interface.
 
-Next steps: 1) play-test the new EQUIP/FIGHT loop end-to-end to ensure NPC spawning, stat buffs, and level-ups behave as expected; 2) decide how the stored `_npcGears` should be assigned during NPC creation to fully leverage the new equipment data.
+## Character Progression System
+
+The player is now represented by a full `AdvCharacter` model that goes far beyond a simple inventory list. Key features include:
+
+- **Stat Growth & Leveling**: When a character levels up, they randomly gain points in strength, dexterity, and intelligence. These stats automatically recalculate derived attributes like hit chance and defense, as well as maximum health.
+- **Experience Tracking**: Characters accumulate experience points that can trigger multiple level gains at once. The experience system integrates with battles—when you win, `AdvBattle.processReward` feeds XP back to your character.
+
+## Equipment & Gear System
+
+A new `AdvGear` subclass extends the basic item system with equipment management (`AdvObject.py`):
+
+- **Typed Items**: A new `CrowtherGears.txt` data file defines equipment that both the player and rooms can spawn with. Each piece of gear has slots, buffs, and equip status.
+- **Equipment Slots**: Characters can equip one item per slot via the `equip/unequip` methods (`AdvCharacter.py`). Stats automatically recalculate from all equipped buffs
+- **UI Integration**: The command prompt now exposes EQUIP and UNEQUIP commands, showing available slots and preventing you from dropping items while they're equipped.
+
+## Consumable Items
+
+Consumable gear (like potions) work differently from equipment:
+
+- When you EQUIP a consumable, it's treated as "using" the item.
+- The system automatically applies the item's buffs to your base stats, clamps your health to the new maximum, removes the item from play, and sends you a message.
+
+## Combat System
+
+New contest gameplay adds NPC encounters and turn-based battles:
+
+- **NPC Encounters**: When you visit a room, NPCs can spawn and persist in that room via the `_npcs` collection. Each visit to a room can introduce new encounters.
+- **Battle Engine**: A dedicated `AdvBattle` class handles combat with turn order, defense-based damage reduction, and critical hits based on your character stats.
+- **Command Integration**: The FIGHT command routes through `AdvPrompt.handleFight`, which returns the outcome to the main game loop.
+
+## Refactored Command System
+
+Command handling has been extracted into a dedicated `AdvPrompt` class that replaces inline logic:
+
+- **New Commands**: Beyond the basic verbs from the original game, you now have ME (status inspection) and enhanced inventory readouts showing item slots and equip state.
+
+## Centralized Configuration
+
+All shared constants have been moved into `AdvConstant` for consistency and reuse:
+
+- The game prefix is imported from constants in `Adventure.py`.
+- Modules use the shared `MARKER` constant instead of hardcoding delimiters.
+- Character and battle tuning numbers are defined in one place for easy balancing.
