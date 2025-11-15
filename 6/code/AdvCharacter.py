@@ -126,6 +126,27 @@ class AdvCharacter:
             if hasattr(item, "isEquipped") and item.isEquipped()
         ]
 
+    @staticmethod
+    def _normalizeSlot(slot):
+        return (slot or "GENERAL").upper()
+
+    @staticmethod
+    def _formatSlot(slot):
+        return AdvCharacter._normalizeSlot(slot).replace("_", " ").title()
+
+    def _findEquippedItemInSlot(self, slot, exclude=None):
+        normalized = self._normalizeSlot(slot)
+        for item in self.getEquippedItems():
+            if item is exclude:
+                continue
+            if hasattr(item, "getEquipSlot"):
+                item_slot = self._normalizeSlot(item.getEquipSlot())
+            else:
+                item_slot = "GENERAL"
+            if item_slot == normalized:
+                return item
+        return None
+
     def addItem(self, item):
         """Adds an item to the player's inventory."""
         self._items.append(item)
@@ -154,31 +175,50 @@ class AdvCharacter:
                         self._stats[key] = value
 
     def equip(self, itemName):
-        """Equips an item from the inventory."""
+        """Equips an item from the inventory, enforcing one item per slot."""
+        target = (itemName or "").upper()
         for item in self._items:
-            if item.getName().upper() == itemName.upper():
-                if hasattr(item, "isEquippable") and item.isEquippable():
-                    if not item.isEquipped():
-                        item.setEquipped(True)
-                        self.recalculateStats()
-                        return f"{item.getName()} equipped."
-                    else:
-                        return f"{item.getName()} is already equipped."
-                else:
-                    return f"You can't equip {item.getName()}."
-        return f"You don't have {itemName}."
+            if item.getName().upper() == target:
+                if not hasattr(item, "isEquippable") or not item.isEquippable():
+                    return False, f"You can't equip {item.getName()}."
+                if item.isEquipped():
+                    return False, f"{item.getName()} is already equipped."
+                slot = (
+                    self._normalizeSlot(item.getEquipSlot())
+                    if hasattr(item, "getEquipSlot")
+                    else "GENERAL"
+                )
+                slot_label = self._formatSlot(slot)
+                conflict = self._findEquippedItemInSlot(slot, exclude=item)
+                if conflict is not None:
+                    return (
+                        False,
+                        f"You already have {conflict.getName()} equipped in the {slot_label} slot. "
+                        "Unequip it first.",
+                    )
+                item.setEquipped(True)
+                self.recalculateStats()
+                return True, f"{item.getName()} equipped."
+        return False, f"You don't have {itemName}."
 
     def unequip(self, itemName):
-        """Unequips an item."""
+        """Unequips an item by name or slot."""
+        target = (itemName or "").upper()
         for item in self._items:
-            if item.getName().upper() == itemName.upper():
+            if item.getName().upper() == target:
                 if hasattr(item, "isEquipped") and item.isEquipped():
                     item.setEquipped(False)
                     self.recalculateStats()
-                    return f"{item.getName()} unequipped."
-                else:
-                    return f"{item.getName()} is not equipped."
-        return f"You don't have {itemName}."
+                    return True, f"{item.getName()} unequipped."
+                if hasattr(item, "isEquippable") and item.isEquippable():
+                    return False, f"{item.getName()} is not equipped."
+                return False, f"You can't unequip {item.getName()}."
+        slot_item = self._findEquippedItemInSlot(target)
+        if slot_item is not None:
+            slot_item.setEquipped(False)
+            self.recalculateStats()
+            return True, f"{slot_item.getName()} unequipped."
+        return False, f"You don't have {itemName} equipped."
 
     def isAlive(self):
         """Returns True if the player is alive"""
@@ -204,9 +244,19 @@ class AdvCharacter:
         }
 
         # Equip any equippable items passed in
+        occupied_slots = []
         for item in items:
             if hasattr(item, "isEquippable") and item.isEquippable():
-                item.setEquipped(True)
+                slot = (
+                    AdvCharacter._normalizeSlot(item.getEquipSlot())
+                    if hasattr(item, "getEquipSlot")
+                    else "GENERAL"
+                )
+                if slot in occupied_slots:
+                    item.setEquipped(False)
+                else:
+                    item.setEquipped(True)
+                    occupied_slots.append(slot)
 
         return AdvCharacter(name, level, base_stats, items, position, isNPC, True)
 

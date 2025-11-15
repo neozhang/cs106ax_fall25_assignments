@@ -1,5 +1,6 @@
 IRON SWORD
 a sturdy iron sword with a sharp blade
+WEAPON
 PLAYER
 -----
 strength: 5
@@ -7,6 +8,7 @@ hit: 15
 
 LEATHER ARMOR
 a suit of worn leather armor
+ARMOR
 OutsideBuilding
 -----
 defense: 6
@@ -14,6 +16,7 @@ maxHealth: 10
 
 WIZARD'S STAFF
 a gnarled wooden staff crackling with arcane energy
+WEAPON
 DebrisRoom
 -----
 intelligence: 8
@@ -21,6 +24,7 @@ hit: 10
 
 HEALTH POTION
 a glowing vial of crimson liquid
+CONSUMABLE
 InsideBuilding
 -----
 health: 25
@@ -28,6 +32,7 @@ maxHealth: 25
 
 IRON HELMET
 a polished iron helmet with a crest
+HELMET
 EndOfRoad
 -----
 defense: 8
@@ -35,6 +40,7 @@ maxHealth: 15
 
 DAGGER
 a small but deadly dagger
+WEAPON
 Valley
 -----
 strength: 3
@@ -43,6 +49,7 @@ hit: 8
 
 RING OF WISDOM
 a golden ring inscribed with runes
+RING
 PLAYER
 -----
 intelligence: 10
@@ -50,6 +57,7 @@ defense: 3
 
 WOODEN SHIELD
 a sturdy wooden shield reinforced with metal bands
+SHIELD
 SlitInRock
 -----
 defense: 10
@@ -57,6 +65,7 @@ maxHealth: 12
 
 SPEED BOOTS
 a pair of enchanted boots that increase movement and reaction time
+BOOTS
 OutsideGrate
 -----
 dexterity: 7
@@ -64,6 +73,7 @@ hit: 5
 
 CLOAK OF SHADOWS
 a dark cloak that helps you blend into darkness
+CLOAK
 BeneathGrate
 -----
 dexterity: 5
@@ -71,6 +81,7 @@ defense: 4
 
 ANCIENT TOME
 a weathered book filled with forgotten knowledge
+TOME
 CobbleCrawl
 -----
 intelligence: 12
@@ -78,6 +89,7 @@ maxHealth: 8
 
 STEEL SWORD
 a well-crafted steel sword with excellent balance
+WEAPON
 OrangeStoneChamber1
 -----
 strength: 8
@@ -85,6 +97,7 @@ hit: 20
 
 FORTITUDE ELIXIR
 a thick potion that strengthens the body
+CONSUMABLE
 Darkness1
 -----
 strength: 6
@@ -92,6 +105,7 @@ maxHealth: 30
 
 MITHRIL ARMOR
 a suit of shimmering armor made of mythical mithril
+ARMOR
 SlopingCanyon
 -----
 defense: 15
@@ -99,6 +113,7 @@ maxHealth: 25
 
 CROWN OF INTELLIGENCE
 a jeweled crown that enhances mental faculties
+HELMET
 TopOfPit
 -----
 intelligence: 15
@@ -107,6 +122,7 @@ defense: 3
 
 BOOTS OF SWIFTNESS
 a pair of leather boots that grant supernatural speed
+BOOTS
 HallOfMists
 -----
 dexterity: 10
@@ -114,6 +130,7 @@ hit: 8
 
 MYSTIC AMULET
 a shimmering amulet pulsing with magical energy
+AMULET
 NuggetRoom
 -----
 intelligence: 7
@@ -122,6 +139,7 @@ defense: 5
 
 GREAT AXE
 a massive axe capable of tremendous damage
+WEAPON
 EastBankOfFissure
 -----
 strength: 12
@@ -130,6 +148,7 @@ defense: -2
 
 BASTION PLATE
 a suit of heavy plate armor that provides maximum protection
+ARMOR
 WestBankOfFissure
 -----
 defense: 20
@@ -138,6 +157,7 @@ dexterity: -2
 
 ROGUE'S DAGGER
 a perfectly balanced blade for precision strikes
+WEAPON
 HallOfTheMountainKing2
 -----
 dexterity: 12
@@ -146,6 +166,7 @@ strength: 2
 
 ELIXIR OF VITALITY
 a shimmering potion that restores and enhances life
+CONSUMABLE
 EastSideChamber
 -----
 health: 40
@@ -154,6 +175,7 @@ strength: 3
 
 SCHOLAR'S SPECTACLES
 a pair of enchanted glasses that sharpen the mind
+HELMET
 LongCurvingPassage
 -----
 intelligence: 9
@@ -161,6 +183,7 @@ dexterity: 3
 
 GREATSWORD
 an impressive longsword of legendary craftsmanship
+WEAPON
 GiantRoom
 -----
 strength: 10

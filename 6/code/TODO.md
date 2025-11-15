@@ -25,3 +25,11 @@ This is a list of tasks to implement a dynamic equipment system where players ca
 - [x] **Update Item Representation:**
     - [x] Ensure that item descriptions indicate whether they are equippable.
     - [x] When displaying inventory, show which items are currently equipped.
+
+## Refactor Equip Slot System
+
+- [x] Add a `type` field to every gear entry in `CrowtherGears.txt` and document expected values.
+- [x] Extend `AdvGear` to store/read the type and expose helpers for slot comparisons.
+- [x] Update `AdvCharacter.equip`/`unequip` to enforce one equipped item per slot and to auto-handle swaps when desired.
+- [x] Improve `AdvPrompt` equip/unequip handlers to provide clearer messaging and streamline successful operations.
+- [x] Retest inventory display and stat recalculation to ensure gear slot restrictions behave correctly.

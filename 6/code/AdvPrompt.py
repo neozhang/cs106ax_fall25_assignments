@@ -43,7 +43,6 @@ class AdvPrompt:
             obj_parts.append(scanner.nextToken())
         obj_string = "".join(obj_parts).strip().upper()
         self._tokenized["obj"] = " ".join(obj_string.split())
-        print(f"OBJ = {self._tokenized['obj']}")
 
     def isBuiltin(self):
         return self._tokenized["verb"] in self._builtins
@@ -88,10 +87,17 @@ class AdvPrompt:
         else:
             print("You are carrying:")
             for item in items:
-                description = item.getDescription()
-                if hasattr(item, "isEquipped") and item.isEquipped():
-                    description += " (equipped)"
-                print(description)
+                slot_label = ""
+                if hasattr(item, "getEquipSlot"):
+                    slot_label = f" [{self._formatSlotLabel(item.getEquipSlot())}]"
+                status = (
+                    " (equipped)"
+                    if hasattr(item, "isEquipped") and item.isEquipped()
+                    else ""
+                )
+                print(
+                    f"- {item.getName()}{slot_label}: {item.getDescription()}{status}"
+                )
         return True
 
     def handleTake(self, obj, room, player):
@@ -130,19 +136,50 @@ class AdvPrompt:
 
     def handleEquip(self, obj, room, player):
         if not obj:
-            print("Equip what?")
+            equippable = self._getEquippableItems(player)
+            if not equippable:
+                print("You have nothing you can equip.")
+            else:
+                print("Specify an item name to equip. Available gear:")
+                for item in equippable:
+                    slot = self._formatSlotLabel(
+                        item.getEquipSlot() if hasattr(item, "getEquipSlot") else None
+                    )
+                    status = " (equipped)" if item.isEquipped() else ""
+                    print(f"- {item.getName()} [{slot}]{status}")
             return True
-        result = player.equip(obj)
-        print(result)
+        _, message = player.equip(obj)
+        print(message)
         return True
 
     def handleUnequip(self, obj, room, player):
         if not obj:
-            print("Unequip what?")
+            equipped = player.getEquippedItems()
+            if not equipped:
+                print("You have nothing equipped.")
+            else:
+                print("Specify an item name or slot to unequip. Currently equipped:")
+                for item in equipped:
+                    slot = self._formatSlotLabel(
+                        item.getEquipSlot() if hasattr(item, "getEquipSlot") else None
+                    )
+                    print(f"- {item.getName()} [{slot}]")
             return True
-        result = player.unequip(obj)
-        print(result)
+        _, message = player.unequip(obj)
+        print(message)
         return True
+
+    def _getEquippableItems(self, player):
+        return [
+            item
+            for item in player.getItems()
+            if hasattr(item, "isEquippable") and item.isEquippable()
+        ]
+
+    def _formatSlotLabel(self, slot):
+        if not slot:
+            return "General"
+        return slot.replace("_", " ").title()
 
 
 class AdvSynonyms:
