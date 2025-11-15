@@ -53,9 +53,9 @@ class AdvGame:
 
         # If passage has an object-specific destination, prefer it when player has object.
         if "objDest" in passage:
-            required_obj = passage.get("obj")
+            requiredObj = passage.get("obj")
             for item in self._player.getItems():
-                if item.getName() == required_obj:
+                if item.getName() == requiredObj:
                     dest = passage.get("objDest")
                     break
             else:
@@ -144,10 +144,10 @@ class AdvGame:
         while prompt.getVerb() != "QUIT":
             # Handle forced passage
             if current.hasForcedPassage():
-                next = self.getNextRoom(current, "FORCED")
-                if next is not None:
-                    current = next
-                    self._player.setPosition(current)
+                nextRoom = self.getNextRoom(current, "FORCED")
+                if nextRoom is not None:
+                    current = nextRoom
+                    self._player.setPosition(current.getName())
                     print(current.getLongDescription())
                     continue
                 else:  # End of world. Game over. -> EXIT.
@@ -187,9 +187,9 @@ class AdvGame:
                 verb = WILDCARD
 
             # Handle movement
-            next = self.getNextRoom(current, verb)
-            if next is None:
+            nextRoom = self.getNextRoom(current, verb)
+            if nextRoom is None:
                 print("You can't go that way.")
             else:
-                current = next
+                current = nextRoom
                 self._player.setPosition(current.getName())

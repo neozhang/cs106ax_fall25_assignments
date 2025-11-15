@@ -56,30 +56,30 @@ class AdvObject:
 
 
 class AdvGear(AdvObject):
-    def __init__(self, name, description, location, buff, gear_type="GENERAL"):
+    def __init__(self, name, description, location, buff, gearType="GENERAL"):
         super().__init__(name, description, location)
         self._buff = buff
-        self._is_equipped = False
-        self._is_equippable = True
-        self._equip_slot = (gear_type or "GENERAL").upper()
+        self._isEquipped = False
+        self._isEquippable = True
+        self._equipSlot = (gearType or "GENERAL").upper()
 
     def getBuff(self):
         return self._buff
 
     def isEquipped(self):
-        return self._is_equipped
+        return self._isEquipped
 
     def setEquipped(self, state):
-        self._is_equipped = state
+        self._isEquipped = state
 
     def isEquippable(self):
-        return self._is_equippable
+        return self._isEquippable
 
     def getEquipSlot(self):
-        return self._equip_slot
+        return self._equipSlot
 
     def setEquipSlot(self, slot):
-        self._equip_slot = (slot or "GENERAL").upper()
+        self._equipSlot = (slot or "GENERAL").upper()
 
     @staticmethod
     def readGear(f):
@@ -89,7 +89,7 @@ class AdvGear(AdvObject):
             return None
 
         description = f.readline().strip()
-        gear_type = f.readline().strip() or "GENERAL"
+        gearType = f.readline().strip() or "GENERAL"
         location = f.readline().strip()
 
         marker = f.readline().strip()
@@ -102,4 +102,4 @@ class AdvGear(AdvObject):
                 key, value = line.split(":")
                 buff[key.strip()] = int(value.strip())
 
-        return AdvGear(name, description, location, buff, gear_type)
+        return AdvGear(name, description, location, buff, gearType)

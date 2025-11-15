@@ -38,11 +38,11 @@ class AdvPrompt:
         self._tokenized["verb"] = verb
 
         # Reconstruct the object string from remaining tokens and normalize whitespace
-        obj_parts = []
+        objParts = []
         while scanner.hasMoreTokens():
-            obj_parts.append(scanner.nextToken())
-        obj_string = "".join(obj_parts).strip().upper()
-        self._tokenized["obj"] = " ".join(obj_string.split())
+            objParts.append(scanner.nextToken())
+        objString = "".join(objParts).strip().upper()
+        self._tokenized["obj"] = " ".join(objString.split())
 
     def isBuiltin(self):
         return self._tokenized["verb"] in self._builtins
@@ -87,17 +87,15 @@ class AdvPrompt:
         else:
             print("You are carrying:")
             for item in items:
-                slot_label = ""
+                slotLabel = ""
                 if hasattr(item, "getEquipSlot"):
-                    slot_label = f" [{self._formatSlotLabel(item.getEquipSlot())}]"
+                    slotLabel = f" [{self._formatSlotLabel(item.getEquipSlot())}]"
                 status = (
                     " (equipped)"
                     if hasattr(item, "isEquipped") and item.isEquipped()
                     else ""
                 )
-                print(
-                    f"- {item.getName()}{slot_label}: {item.getDescription()}{status}"
-                )
+                print(f"- {item.getName()}{slotLabel}: {item.getDescription()}{status}")
         return True
 
     def handleTake(self, obj, room, player):
@@ -183,8 +181,8 @@ class AdvPrompt:
             return "General"
         return slot.replace("_", " ").title()
 
-    def _pickupConsumableFromRoom(self, obj_name, room, player):
-        target = (obj_name or "").upper()
+    def _pickupConsumableFromRoom(self, objName, room, player):
+        target = (objName or "").upper()
         for item in list(room.getContents()):
             if item.getName().upper() == target and self._isConsumable(item):
                 player.addItem(item)

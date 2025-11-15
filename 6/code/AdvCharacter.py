@@ -18,7 +18,7 @@ class AdvCharacter:
     ):
         self._name = name
         self._level = level
-        self._base_stats = stats
+        self._baseStats = stats
         self._stats = None
         self._items = items
         self.recalculateStats()
@@ -54,18 +54,18 @@ class AdvCharacter:
         self._level += 1
         # distribute stat points for this one level-up
         s, d, i = randThreeIntsSum(C["PT_PER_LEVEL"])
-        self._base_stats["strength"] += s
-        self._base_stats["dexterity"] += d
-        self._base_stats["intelligence"] += i
+        self._baseStats["strength"] += s
+        self._baseStats["dexterity"] += d
+        self._baseStats["intelligence"] += i
         # recalc health (keeps the original per-level constant behavior)
-        self._base_stats["maxHealth"] = (
-            self._base_stats["strength"] * C["MAXHEALTH_TO_STR"]
+        self._baseStats["maxHealth"] = (
+            self._baseStats["strength"] * C["MAXHEALTH_TO_STR"]
             + self._level * C["MAXHEALTH_TO_LVL"]
         )
-        self._base_stats["health"] = self._base_stats["maxHealth"]
-        # update derived stats in base_stats
-        self._base_stats["hit"] = self._base_stats["strength"] * C["HIT_TO_STR"]
-        self._base_stats["defense"] = self._base_stats["strength"] * C["DEFENSE_TO_STR"]
+        self._baseStats["health"] = self._baseStats["maxHealth"]
+        # update derived stats in baseStats
+        self._baseStats["hit"] = self._baseStats["strength"] * C["HIT_TO_STR"]
+        self._baseStats["defense"] = self._baseStats["strength"] * C["DEFENSE_TO_STR"]
 
         self.recalculateStats()
 
@@ -79,7 +79,7 @@ class AdvCharacter:
 
     def getExperience(self):
         """Returns the player's experience."""
-        return self._base_stats["experience"]
+        return self._baseStats["experience"]
 
     def setExperience(self, experience: int):
         """Sets the player's experience as remaining XP. Each level-up reduces XP by the per-level threshold.
@@ -102,16 +102,17 @@ class AdvCharacter:
                 continue
             break
         # store the remaining XP
-        self._base_stats["experience"] = experience
+        self._baseStats["experience"] = experience
         if leveled:
             self.recalculateStats()  # Recalculate stats in case level up happened
         return leveled
 
     def getCritMultiplier(self):
-        critChance = min(self._stats["intelligence"] / 100, C["MAX_CRIT_CHANCE"])
-        dexBonus = min(self._stats["dexterity"] / 100, C["MAX_DEX_BONUS"])
-        if random.random() < critChance:
-            return C["BASE_CRIT_MULTIPLIER"] + dexBonus
+        if self._stats is not None:
+            critChance = min(self._stats["intelligence"] / 100, C["MAX_CRIT_CHANCE"])
+            dexBonus = min(self._stats["dexterity"] / 100, C["MAX_DEX_BONUS"])
+            if random.random() < critChance:
+                return C["BASE_CRIT_MULTIPLIER"] + dexBonus
         return 1.0
 
     def getItems(self):
@@ -140,10 +141,10 @@ class AdvCharacter:
             if item is exclude:
                 continue
             if hasattr(item, "getEquipSlot"):
-                item_slot = self._normalizeSlot(item.getEquipSlot())
+                itemSlot = self._normalizeSlot(item.getEquipSlot())
             else:
-                item_slot = "GENERAL"
-            if item_slot == normalized:
+                itemSlot = "GENERAL"
+            if itemSlot == normalized:
                 return item
         return None
 
@@ -164,7 +165,7 @@ class AdvCharacter:
 
     def recalculateStats(self):
         """Recalculates stats by applying buffs from equipped items to base stats."""
-        self._stats = self._base_stats.copy()
+        self._stats = self._baseStats.copy()
         for item in self.getEquippedItems():
             buff = item.getBuff()
             if buff:
@@ -178,13 +179,13 @@ class AdvCharacter:
         if not buff:
             return
         for key, value in buff.items():
-            current = self._base_stats.get(key, 0)
-            self._base_stats[key] = current + value
-        if "health" in self._base_stats and "maxHealth" in self._base_stats:
-            max_health = self._base_stats["maxHealth"]
-            if max_health is not None:
-                self._base_stats["health"] = max(
-                    0, min(self._base_stats["health"], max_health)
+            current = self._baseStats.get(key, 0)
+            self._baseStats[key] = current + value
+        if "health" in self._baseStats and "maxHealth" in self._baseStats:
+            maxHealth = self._baseStats["maxHealth"]
+            if maxHealth is not None:
+                self._baseStats["health"] = max(
+                    0, min(self._baseStats["health"], maxHealth)
                 )
 
     def _consumeItem(self, item):
@@ -212,12 +213,12 @@ class AdvCharacter:
                 )
                 if slot == "CONSUMABLE":
                     return self._consumeItem(item)
-                slot_label = self._formatSlot(slot)
+                slotLabel = self._formatSlot(slot)
                 conflict = self._findEquippedItemInSlot(slot, exclude=item)
                 if conflict is not None:
                     return (
                         False,
-                        f"You already have {conflict.getName()} equipped in the {slot_label} slot. "
+                        f"You already have {conflict.getName()} equipped in the {slotLabel} slot. "
                         "Unequip it first.",
                     )
                 item.setEquipped(True)
@@ -237,11 +238,11 @@ class AdvCharacter:
                 if hasattr(item, "isEquippable") and item.isEquippable():
                     return False, f"{item.getName()} is not equipped."
                 return False, f"You can't unequip {item.getName()}."
-        slot_item = self._findEquippedItemInSlot(target)
-        if slot_item is not None:
-            slot_item.setEquipped(False)
+        slotItem = self._findEquippedItemInSlot(target)
+        if slotItem is not None:
+            slotItem.setEquipped(False)
             self.recalculateStats()
-            return True, f"{slot_item.getName()} unequipped."
+            return True, f"{slotItem.getName()} unequipped."
         return False, f"You don't have {itemName} equipped."
 
     def isAlive(self):
@@ -256,7 +257,7 @@ class AdvCharacter:
         strength, dexterity, intelligence = randThreeIntsSum(p)
         maxHealth = strength * C["MAXHEALTH_TO_STR"] + level * C["MAXHEALTH_TO_LVL"]
         health = maxHealth
-        base_stats = {
+        baseStats = {
             "health": health,
             "maxHealth": maxHealth,
             "strength": strength,
@@ -268,7 +269,7 @@ class AdvCharacter:
         }
 
         # Equip any equippable items passed in
-        occupied_slots = []
+        occupiedSlots = []
         for item in items:
             if hasattr(item, "isEquippable") and item.isEquippable():
                 slot = (
@@ -276,13 +277,13 @@ class AdvCharacter:
                     if hasattr(item, "getEquipSlot")
                     else "GENERAL"
                 )
-                if slot in occupied_slots:
+                if slot in occupiedSlots:
                     item.setEquipped(False)
                 else:
                     item.setEquipped(True)
-                    occupied_slots.append(slot)
+                    occupiedSlots.append(slot)
 
-        return AdvCharacter(name, level, base_stats, items, position, isNPC, True)
+        return AdvCharacter(name, level, baseStats, items, position, isNPC, True)
 
     @staticmethod
     def readCharacter(f):  # TODO: needs to be implemented

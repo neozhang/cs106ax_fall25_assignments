@@ -18,11 +18,11 @@ from AdvConstant import MARKER
 
 
 class AdvRoom:
-    def __init__(self, name, shortdesc, longdesc, passages):
+    def __init__(self, name, shortDesc, longDesc, passages):
         """Creates a new room with the specified attributes."""
         self._name = name
-        self._shortdesc = shortdesc
-        self._longdesc = longdesc
+        self._shortDesc = shortDesc
+        self._longDesc = longDesc
         self._passages = passages
         self._visited = False
         self._objects = []
@@ -34,11 +34,11 @@ class AdvRoom:
 
     def getShortDescription(self):
         """Returns a one-line short description of this room."""
-        return self._shortdesc
+        return self._shortDesc
 
     def getLongDescription(self):
         """Returns the list of lines describing this room."""
-        return self._longdesc
+        return self._longDesc
 
     def getPassage(self, verb):
         """Returns the destination list of this room."""
@@ -98,14 +98,14 @@ class AdvRoom:
             return None
 
         # Read room descriptions
-        shortdesc = f.readline().rstrip()
-        longdesc = ""
+        shortDesc = f.readline().rstrip()
+        longDesc = ""
         while True:
             line = f.readline().rstrip()
             if line == MARKER:
                 break
-            longdesc += line + "\n"
-        longdesc = longdesc.rstrip()
+            longDesc += line + "\n"
+        longDesc = longDesc.rstrip()
 
         # Read room passages
         passages = {}
@@ -129,4 +129,4 @@ class AdvRoom:
             else:
                 passages[verb]["defaultDest"] = destination
 
-        return AdvRoom(name, shortdesc, longdesc, passages)
+        return AdvRoom(name, shortDesc, longDesc, passages)
