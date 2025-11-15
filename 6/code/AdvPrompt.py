@@ -89,7 +89,7 @@ class AdvPrompt:
             for item in items:
                 slotLabel = ""
                 if hasattr(item, "getEquipSlot"):
-                    slotLabel = f" [{self._formatSlotLabel(item.getEquipSlot())}]"
+                    slotLabel = f" [{self.formatSlotLabel(item.getEquipSlot())}]"
                 status = (
                     " (equipped)"
                     if hasattr(item, "isEquipped") and item.isEquipped()
@@ -134,21 +134,21 @@ class AdvPrompt:
 
     def handleEquip(self, obj, room, player):
         if not obj:
-            equippable = self._getEquippableItems(player)
+            equippable = self.getEquippableItems(player)
             if not equippable:
                 print("You have nothing you can equip.")
             else:
                 print("Specify an item name to equip. Available gear:")
                 for item in equippable:
-                    slot = self._formatSlotLabel(
+                    slot = self.formatSlotLabel(
                         item.getEquipSlot() if hasattr(item, "getEquipSlot") else None
                     )
                     status = " (equipped)" if item.isEquipped() else ""
                     print(f"- {item.getName()} [{slot}]{status}")
             return True
         if not player.hasItem(obj):
-            self._pickupConsumableFromRoom(obj, room, player)
-        _, message = player.equip(obj)
+            self.pickupConsumableFromRoom(obj, room, player)
+        success, message = player.equip(obj)
         print(message)
         return True
 
@@ -160,37 +160,37 @@ class AdvPrompt:
             else:
                 print("Specify an item name or slot to unequip. Currently equipped:")
                 for item in equipped:
-                    slot = self._formatSlotLabel(
+                    slot = self.formatSlotLabel(
                         item.getEquipSlot() if hasattr(item, "getEquipSlot") else None
                     )
                     print(f"- {item.getName()} [{slot}]")
             return True
-        _, message = player.unequip(obj)
+        success, message = player.unequip(obj)
         print(message)
         return True
 
-    def _getEquippableItems(self, player):
-        return [
-            item
-            for item in player.getItems()
-            if hasattr(item, "isEquippable") and item.isEquippable()
-        ]
+    def getEquippableItems(self, player):
+        equippable = []
+        for item in player.getItems():
+            if hasattr(item, "isEquippable") and item.isEquippable():
+                equippable.append(item)
+        return equippable
 
-    def _formatSlotLabel(self, slot):
+    def formatSlotLabel(self, slot):
         if not slot:
             return "General"
         return slot.replace("_", " ").title()
 
-    def _pickupConsumableFromRoom(self, objName, room, player):
+    def pickupConsumableFromRoom(self, objName, room, player):
         target = (objName or "").upper()
         for item in list(room.getContents()):
-            if item.getName().upper() == target and self._isConsumable(item):
+            if item.getName().upper() == target and self.isConsumable(item):
                 player.addItem(item)
                 room.removeObject(item)
                 return True
         return False
 
-    def _isConsumable(self, item):
+    def isConsumable(self, item):
         slot = item.getEquipSlot() if hasattr(item, "getEquipSlot") else None
         if slot is None:
             return False

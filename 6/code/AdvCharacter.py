@@ -108,6 +108,7 @@ class AdvCharacter:
         return leveled
 
     def getCritMultiplier(self):
+        """calculate the crit multiplier"""
         if self._stats is not None:
             critChance = min(self._stats["intelligence"] / 100, C["MAX_CRIT_CHANCE"])
             dexBonus = min(self._stats["dexterity"] / 100, C["MAX_DEX_BONUS"])
@@ -128,20 +129,18 @@ class AdvCharacter:
         ]
 
     @staticmethod
-    def _normalizeSlot(slot):
+    def normalizeSlot(slot):
+        """Normalizes the given slot name to uppercase."""
         return (slot or "GENERAL").upper()
 
-    @staticmethod
-    def _formatSlot(slot):
-        return AdvCharacter._normalizeSlot(slot).replace("_", " ").title()
-
-    def _findEquippedItemInSlot(self, slot, exclude=None):
-        normalized = self._normalizeSlot(slot)
+    def findEquippedItemInSlot(self, slot, exclude=None):
+        """Returns the first equipped item in the given slot, or None if no such item exists."""
+        normalized = self.normalizeSlot(slot)
         for item in self.getEquippedItems():
             if item is exclude:
                 continue
             if hasattr(item, "getEquipSlot"):
-                itemSlot = self._normalizeSlot(item.getEquipSlot())
+                itemSlot = self.normalizeSlot(item.getEquipSlot())
             else:
                 itemSlot = "GENERAL"
             if itemSlot == normalized:
@@ -175,7 +174,8 @@ class AdvCharacter:
                     else:
                         self._stats[key] = value
 
-    def _applyBuffToBaseStats(self, buff):
+    def applyBuffToBaseStats(self, buff):
+        """Apply a buff to the base stats."""
         if not buff:
             return
         for key, value in buff.items():
@@ -188,8 +188,9 @@ class AdvCharacter:
                     0, min(self._baseStats["health"], maxHealth)
                 )
 
-    def _consumeItem(self, item):
-        self._applyBuffToBaseStats(item.getBuff() if hasattr(item, "getBuff") else None)
+    def consumeItem(self, item):
+        """Consumes an item, applying its buff and removing it from the inventory."""
+        self.applyBuffToBaseStats(item.getBuff() if hasattr(item, "getBuff") else None)
         if hasattr(item, "setEquipped"):
             item.setEquipped(False)
         if item in self._items:
@@ -207,14 +208,14 @@ class AdvCharacter:
                 if item.isEquipped():
                     return False, f"{item.getName()} is already equipped."
                 slot = (
-                    self._normalizeSlot(item.getEquipSlot())
+                    self.normalizeSlot(item.getEquipSlot())
                     if hasattr(item, "getEquipSlot")
                     else "GENERAL"
                 )
                 if slot == "CONSUMABLE":
-                    return self._consumeItem(item)
-                slotLabel = self._formatSlot(slot)
-                conflict = self._findEquippedItemInSlot(slot, exclude=item)
+                    return self.consumeItem(item)
+                slotLabel = self.normalizeSlot(slot)
+                conflict = self.findEquippedItemInSlot(slot, exclude=item)
                 if conflict is not None:
                     return (
                         False,
@@ -238,7 +239,7 @@ class AdvCharacter:
                 if hasattr(item, "isEquippable") and item.isEquippable():
                     return False, f"{item.getName()} is not equipped."
                 return False, f"You can't unequip {item.getName()}."
-        slotItem = self._findEquippedItemInSlot(target)
+        slotItem = self.findEquippedItemInSlot(target)
         if slotItem is not None:
             slotItem.setEquipped(False)
             self.recalculateStats()
@@ -273,7 +274,7 @@ class AdvCharacter:
         for item in items:
             if hasattr(item, "isEquippable") and item.isEquippable():
                 slot = (
-                    AdvCharacter._normalizeSlot(item.getEquipSlot())
+                    AdvCharacter.normalizeSlot(item.getEquipSlot())
                     if hasattr(item, "getEquipSlot")
                     else "GENERAL"
                 )
