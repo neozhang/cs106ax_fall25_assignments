@@ -286,32 +286,6 @@ class AdvCharacter:
 
         return AdvCharacter(name, level, baseStats, items, position, isNPC, True)
 
-    @staticmethod
-    def readCharacter(f):  # TODO: needs to be implemented
-        """Reads a character from a file. Only works for NPC."""
-        name = f.readline().strip()
-        if name == "":
-            return None
-        level = int(f.readline().strip())
-        stats = {}
-        while True:
-            line = f.readline().strip()
-            if line == "":
-                break
-            key, value = line.strip().split(":")
-            stats[key] = int(value)
-
-        items = []
-        while True:
-            line = f.readline().strip()
-            if line == "":
-                break
-            items.append(line.strip())  # This should be creating AdvObjects
-
-        position = f.readline().strip()
-        isAlive = f.readline().strip() == "True"
-        return AdvCharacter(name, level, stats, items, position, True, isAlive)
-
 
 def randThreeIntsSum(sum):
     """Generate 3 integers which sum to a given integer."""

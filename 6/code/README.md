@@ -14,6 +14,7 @@ The player is now represented by a full `AdvCharacter` model that goes far beyon
 A new `AdvGear` subclass extends the basic item system with equipment management (`AdvObject.py`):
 
 - **Typed Items**: A new `CrowtherGears.txt` data file defines equipment that both the player and rooms can spawn with. Each piece of gear has slots, buffs, and equip status.
+  - Disclaimer: An LLM was used to generate the gear data file.
 - **Equipment Slots**: Characters can equip one item per slot via the `equip/unequip` methods (`AdvCharacter.py`). Stats automatically recalculate from all equipped buffs
 - **UI Integration**: The command prompt now exposes EQUIP and UNEQUIP commands, showing available slots and preventing you from dropping items while they're equipped.
 
