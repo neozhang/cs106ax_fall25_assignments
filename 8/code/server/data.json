@@ -1,0 +1,128 @@
+{
+    "86c1cd96-3bc2-4282-ad15-8db06846f9f7": {
+        "id": "86c1cd96-3bc2-4282-ad15-8db06846f9f7",
+        "message": "Welcome to Flutterer! I'm Ben :)",
+        "timestamp": "Wed Nov 12 16:15:17 2025",
+        "username": "Ben Yan",
+        "liked_by": [
+            "Andy Wang",
+            "Diego Padilla"
+        ],
+        "comments": []
+    },
+    "03dcd19f-8023-43cc-8379-2d51ff71c3c2": {
+        "id": "03dcd19f-8023-43cc-8379-2d51ff71c3c2",
+        "message": "CS106AX is the best woo hoo!",
+        "timestamp": "Wed Nov 12 16:15:27 2025",
+        "username": "Jenny Wei",
+        "liked_by": [
+            "Ben Yan",
+            "Andy Wang",
+            "Diego Padilla",
+            "Sabrina Yen-Ko"
+        ],
+        "comments": [
+            {
+                "id": "08b4d376-62e0-4815-8f26-4206f39cf5f4",
+                "message": "Hi Jenny, glad that you're back!",
+                "username": "Ben Yan"
+            }
+        ]
+    },
+    "c084a0a4-76c9-471c-add3-c731cf9638cd": {
+        "id": "c084a0a4-76c9-471c-add3-c731cf9638cd",
+        "message": "Hello world! I am Diego.",
+        "timestamp": "Wed Nov 12 16:15:59 2025",
+        "username": "Diego Padilla",
+        "liked_by": [
+            "Ben Yan",
+            "Eugene Francisco",
+            "Sabrina Yen-Ko"
+        ],
+        "comments": [
+            {
+                "id": "aa15ad9f-4b59-47a9-ad69-bb7b64d184ea",
+                "message": "Want to go grab dinner at Lag?",
+                "username": "Eugene Francisco"
+            },
+            {
+                "id": "97d0a902-5464-4430-a561-2088a61d7785",
+                "message": "Yes!",
+                "username": "Diego Padilla"
+            },
+            {
+                "id": "7857d0ee-9824-43e8-b883-d42b99cc883a",
+                "message": "Yay, anyone else?",
+                "username": "Eugene Francisco"
+            },
+            {
+                "id": "4bcca3cf-038e-4c74-8a7f-3a64900346c5",
+                "message": "I'll join!",
+                "username": "Andy Wang"
+            }
+        ]
+    },
+    "92cb9f3a-c861-423e-a475-58099c22a65c": {
+        "id": "92cb9f3a-c861-423e-a475-58099c22a65c",
+        "message": "Greetings, I am Sabrina!",
+        "timestamp": "Wed Nov 12 16:16:14 2025",
+        "username": "Sabrina Yen-Ko",
+        "liked_by": [
+            "Ben Yan",
+            "Jenny Wei",
+            "Tina Zheng"
+        ],
+        "comments": [
+            {
+                "id": "e25f919d-f677-44a1-a7ac-3cc89a1de886",
+                "message": "Hi Sabrina!",
+                "username": "Tina Zheng"
+            }
+        ]
+    },
+    "8b30ab09-63df-4d07-a992-cb6481436f00": {
+        "id": "8b30ab09-63df-4d07-a992-cb6481436f00",
+        "message": "Did someone forget to add Jerry?",
+        "timestamp": "Wed Nov 12 16:17:03 2025",
+        "username": "Andy Wang",
+        "liked_by": [
+            "Ben Yan",
+            "Diego Padilla",
+            "Jenny Wei",
+            "Tina Zheng",
+            "Sabrina Yen-Ko",
+            "Eugene Francisco"
+        ],
+        "comments": []
+    },
+    "c0704be7-0f35-4ee1-a564-ecd4c2242986": {
+        "id": "c0704be7-0f35-4ee1-a564-ecd4c2242986",
+        "message": "Just added Jerry, floot floot!",
+        "timestamp": "Wed Nov 12 17:45:40 2025",
+        "username": "Eugene Francisco",
+        "liked_by": [
+            "Sabrina Yen-Ko",
+            "Diego Padilla",
+            "Ben Yan"
+        ],
+        "comments": [
+            {
+                "id": "875106b0-52b6-4b58-bf08-05f05be8f1f4",
+                "message": "Nice",
+                "username": "Jenny Wei"
+            }
+        ]
+    },
+    "a87b1fdb-f7e8-4cfb-b7e2-34be42f1d455": {
+        "id": "a87b1fdb-f7e8-4cfb-b7e2-34be42f1d455",
+        "message": "I'm Tina!",
+        "timestamp": "Wed Nov 12 17:47:47 2025",
+        "username": "Tina Zheng",
+        "liked_by": [
+            "Sabrina Yen-Ko",
+            "Ben Yan",
+            "Andy Wang"
+        ],
+        "comments": []
+    }
+}
