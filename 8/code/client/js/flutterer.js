@@ -9,15 +9,15 @@
 // API route that lets users sign up, and then here, you can load a list of
 // registered users.)
 const USERS = [
-    "Ben Yan",
-    "Andy Wang",
-    "Diego Padilla",
-    "Eugene Francisco",
-    "Jenny Wei",
-    "Sabrina Yen-Ko",
-    "Tina Zheng",
-    "Doris Beyonce James-Cain",
-    "Jerry Cain",
+  "Ben Yan",
+  "Andy Wang",
+  "Diego Padilla",
+  "Eugene Francisco",
+  "Jenny Wei",
+  "Sabrina Yen-Ko",
+  "Tina Zheng",
+  "Doris Beyonce James-Cain",
+  "Jerry Cain",
 ];
 
 /**
@@ -26,7 +26,7 @@ const USERS = [
  * Flutterer's entry point
  */
 function Flutterer() {
-    // TODO: Implement this function, starting in Milestone 2
+  document.body.appendChild(MainComponent(USERS[0], [], {}));
 }
 
 /**
@@ -51,7 +51,13 @@ function Flutterer() {
  *   </div>
  */
 function MainComponent(selectedUser, floots, actions) {
-    // TODO: Implement this component in Milestone 2
+  let container = document.createElement("div");
+  let sidebar = Sidebar(USERS, selectedUser, actions);
+  let newsfeed = NewsFeed(selectedUser, floots, actions);
+  container.className = "primary-container";
+  container.appendChild(sidebar);
+  container.appendChild(newsfeed);
+  return container;
 }
 
 /**
@@ -65,44 +71,54 @@ function MainComponent(selectedUser, floots, actions) {
  * doing quick debugging.
  */
 (() => {
-    function log_info(msg, ...extraArgs) {
-        console.info("%c" + msg, "color: #8621eb", ...extraArgs);
-    }
-    function log_success(msg, ...extraArgs) {
-        console.info("%c" + msg, "color: #39b80b", ...extraArgs);
-    }
-    function log_error(msg, ...extraArgs) {
-        console.warn("%c" + msg, "color: #c73518", ...extraArgs);
-    }
-    const _fetch = window.fetch;
-    window.fetch = function(...args) {
-        log_info(`Making async request to ${args[1].method} ${args[0]}...`);
-        return new Promise((resolve, reject) => {
-            _fetch(...args).then((result) => {
-                const our_result = result.clone();
-                our_result.text().then((out_text) => {
-                    if (our_result.ok) {
-                        log_success(`Server returned successful response for ${our_result.url}`);
-                    } else {
-                        log_error(`Server returned Error ${our_result.status} `
-                            + `(${our_result.statusText}) for ${our_result.url}`,
-                            out_text);
-                    }
-                    resolve(result);
-                });
-            }, (error) => {
-                log_error('Error!', error);
-                reject(error);
-            });
-        });
-    };
+  function log_info(msg, ...extraArgs) {
+    console.info("%c" + msg, "color: #8621eb", ...extraArgs);
+  }
+  function log_success(msg, ...extraArgs) {
+    console.info("%c" + msg, "color: #39b80b", ...extraArgs);
+  }
+  function log_error(msg, ...extraArgs) {
+    console.warn("%c" + msg, "color: #c73518", ...extraArgs);
+  }
+  const _fetch = window.fetch;
+  window.fetch = function (...args) {
+    log_info(`Making async request to ${args[1].method} ${args[0]}...`);
+    return new Promise((resolve, reject) => {
+      _fetch(...args).then(
+        (result) => {
+          const our_result = result.clone();
+          our_result.text().then((out_text) => {
+            if (our_result.ok) {
+              log_success(
+                `Server returned successful response for ${our_result.url}`,
+              );
+            } else {
+              log_error(
+                `Server returned Error ${our_result.status} ` +
+                  `(${our_result.statusText}) for ${our_result.url}`,
+                out_text,
+              );
+            }
+            resolve(result);
+          });
+        },
+        (error) => {
+          log_error("Error!", error);
+          reject(error);
+        },
+      );
+    });
+  };
 
-    log_info("Did you know?", "For this assignment, we have added some code that "
-        + "logs network requests in the JS console. However, the Network tab "
-        + "has even more useful information. If you are having problems with API "
-        + "calls, the Network tab may be a good place to check out; you can see "
-        + "POST request bodies, full server responses, and anything else you might "
-        + "desire there.");
+  log_info(
+    "Did you know?",
+    "For this assignment, we have added some code that " +
+      "logs network requests in the JS console. However, the Network tab " +
+      "has even more useful information. If you are having problems with API " +
+      "calls, the Network tab may be a good place to check out; you can see " +
+      "POST request bodies, full server responses, and anything else you might " +
+      "desire there.",
+  );
 })();
 
 document.addEventListener("DOMContentLoaded", Flutterer);
