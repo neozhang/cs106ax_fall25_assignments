@@ -66,7 +66,7 @@ def get_floot(floot_id):
     if db.has_floot(floot_id):
         return db.get_floot_by_id(floot_id).to_dictionary()
     else:
-        return HTTPError(404, "Provided floot ID could not be found")
+        return HTTPError(404, f"No floot with id {floot_id} in database")
 
 
 # POST /api/floots
@@ -117,7 +117,7 @@ def delete_floot(floot_id, request_body):
       function should return "OK".
     """
     if not db.has_floot(floot_id):
-        return HTTPError(404, "Provided floot ID could not be found")
+        return HTTPError(404, f"No floot with id {floot_id} in database")
     elif "username" not in request_body:
         return HTTPError(400, "Missing keys in payload")
     elif request_body["username"] != db.get_floot_by_id(floot_id).get_username():
@@ -125,7 +125,11 @@ def delete_floot(floot_id, request_body):
             401, "Provided username does not match with the one who created the floot"
         )
     else:
-        return '"OK"'
+        try:
+            db.delete_floot_by_id(floot_id)
+            return "OK"
+        except:
+            return HTTPError(404, f"No floot with id {floot_id} in database")
 
 
 # GET /api/floot/{floot_id}/comments
@@ -135,8 +139,14 @@ def get_comments(floot_id):
     return a list of dictionaries, not a list of FlootComment objects.) If
     floot_id is invalid, return an HTTPError with status 404.
     """
-    # TODO: delete the following line, and replace it with your own implementation
-    return HTTPError(501, "api.get_comments not implemented yet")
+    if db.has_floot(floot_id):
+        comment_list = db.get_floot_by_id(floot_id).get_comments()
+        res = []
+        for comment in comment_list:
+            res.append(comment.to_dictionary())
+        return res
+    else:
+        return HTTPError(404, f"No floot with id {floot_id} in database")
 
 
 # POST /api/floots/{floot_id}/comments
