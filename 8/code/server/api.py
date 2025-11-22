@@ -88,8 +88,12 @@ def create_floot(request_body):
     When you've saved the new floot to the database, return the floot as a
     dictionary (see Floot.to_dictionary).
     """
-    # TODO: delete the following line, and replace it with your own implementation
-    return HTTPError(501, "api.create_floot not implemented yet")
+    if "message" in request_body and "username" in request_body:
+        floot = Floot(request_body["message"], request_body["username"])
+        db.save_floot(floot)
+        return floot.to_dictionary()
+    else:
+        return HTTPError(400, "Missing keys in payload")
 
 
 # POST /api/floots/{floot_id}/delete
