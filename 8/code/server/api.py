@@ -196,8 +196,30 @@ def delete_comment(floot_id, comment_id, request_body):
       status 401.
     * Otherwise, if everything works successfully, return "OK".
     """
-    # TODO: delete the following line, and replace it with your own implementation
-    return HTTPError(501, "api.delete_comment not implemented yet")
+    if not db.has_floot(floot_id):
+        return HTTPError(404, f"No floot with id {floot_id} in database")
+
+    if "username" not in request_body:
+        return HTTPError(400, "Missing keys in payload")
+
+    floot = db.get_floot_by_id(floot_id)
+    comments = floot.get_comments()
+
+    if get_comment_by_id(comments, comment_id) is None:
+        return HTTPError(404, f"No floot comment with id {comment_id} in database")
+
+    comment_to_delete = get_comment_by_id(comments, comment_id)
+
+    if request_body["username"] != comment_to_delete.get_author():
+        return HTTPError(
+            401, f"{request_body['username']} is not the author for the comment"
+        )
+    else:
+        try:
+            floot.delete_comment(comment_to_delete, request_body["username"])
+            return "OK"
+        except:
+            return HTTPError(400, "Comment deletion failed")
 
 
 # POST /api/floots/{floot_id}/like
@@ -268,3 +290,17 @@ POST_ROUTES = [
     (("/api/floots/(.*)/like", "floot_id"), like_floot),
     (("/api/floots/(.*)/unlike", "floot_id"), unlike_floot),
 ]
+
+# HELPERS
+# -------
+
+
+# Return the FlootComment() Object if a comment_id exists in a given list.
+# Otherwise return None.
+def get_comment_by_id(
+    comments: list[FlootComment], comment_id: str
+) -> FlootComment | None:
+    for comment in comments:
+        if comment_id == comment.get_id():
+            return comment
+    return None
