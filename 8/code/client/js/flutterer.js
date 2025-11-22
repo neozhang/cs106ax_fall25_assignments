@@ -59,6 +59,14 @@ function Flutterer() {
         })
         .send();
     },
+    openFlootInModal: (floot_id) => {
+      AsyncRequest("api/floots/" + floot_id)
+        .setSuccessHandler((res) => {
+          const selectedFloot = JSON.parse(res.getPayload());
+          renderMC(selectedUser, floots, actions, selectedFloot);
+        })
+        .send();
+    },
   };
 
   updateFlootsIntoMC(selectedUser, actions);
@@ -74,11 +82,11 @@ function Flutterer() {
       .send();
   }
 
-  function renderMC(username, floots, actions) {
+  function renderMC(username, floots, actions, floot = null) {
     while (document.body.lastChild != null) {
       document.body.removeChild(document.body.lastChild);
     }
-    document.body.appendChild(MainComponent(username, floots, actions));
+    document.body.appendChild(MainComponent(username, floots, actions, floot));
   }
 }
 
@@ -103,13 +111,20 @@ function Flutterer() {
  *       <NewsFeed />
  *   </div>
  */
-function MainComponent(selectedUser, floots, actions) {
+function MainComponent(selectedUser, floots, actions, selectedFloot = null) {
   let container = document.createElement("div");
   let sidebar = Sidebar(USERS, selectedUser, actions);
   let newsfeed = NewsFeed(selectedUser, floots, actions);
+
   container.className = "primary-container";
   container.appendChild(sidebar);
   container.appendChild(newsfeed);
+
+  if (selectedFloot != null) {
+    let flootmodal = FlootModal(selectedFloot, selectedUser, actions);
+    container.appendChild(flootmodal);
+  }
+
   return container;
 }
 

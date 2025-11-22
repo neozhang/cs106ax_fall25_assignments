@@ -177,8 +177,7 @@ function Floot(flootInfo, selectedUser, showDelete, actions) {
    * comments.)
    */
   function handleCardClick() {
-    // TODO: Milestone 7: Call one of your functions in `actions` to open a
-    // modal showing this floot's comments.
+    actions.openFlootInModal(flootInfo.id);
   }
 
   /**
