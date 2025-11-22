@@ -162,8 +162,18 @@ def create_comment(floot_id, request_body):
     status 400. Otherwise, if the comment was created successfully, returns the
     new comment as a dictionary (see FlootComment.to_dictionary()).
     """
-    # TODO: delete the following line, and replace it with your own implementation
-    return HTTPError(501, "api.create_comment not implemented yet")
+    if not db.has_floot(floot_id):
+        return HTTPError(404, f"No floot with id {floot_id} in database")
+    elif "username" not in request_body or "message" not in request_body:
+        return HTTPError(400, "Missing keys in payload")
+    else:
+        floot = db.get_floot_by_id(floot_id)
+        comment = FlootComment(request_body["message"], request_body["username"])
+        try:
+            floot.create_comment(comment)
+            return comment.to_dictionary()
+        except:
+            return HTTPError(400, "Comment crreation failed")
 
 
 # POST /api/floots/{floot_id}/comments/{comment_id}/delete
