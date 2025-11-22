@@ -24,11 +24,11 @@
  *   </div>
  */
 function Sidebar(users, selectedUser, actions) {
-    let sidebar = document.createElement("div");
-    sidebar.classList.add("sidebar");
-    sidebar.appendChild(FluttererLogo());
-    sidebar.appendChild(AccountSelector(users, selectedUser, actions));
-    return sidebar;
+  let sidebar = document.createElement("div");
+  sidebar.classList.add("sidebar");
+  sidebar.appendChild(FluttererLogo());
+  sidebar.appendChild(AccountSelector(users, selectedUser, actions));
+  return sidebar;
 }
 
 /**
@@ -42,21 +42,21 @@ function Sidebar(users, selectedUser, actions) {
  *   </div>
  */
 function FluttererLogo() {
-    let logo = document.createElement("div");
-    logo.classList.add("flutterer-logo");
+  let logo = document.createElement("div");
+  logo.classList.add("flutterer-logo");
 
-    let icon = document.createElement("img");
-    icon.classList.add("owl-icon");
-    // Set alt text for vision impaired
-    icon.setAttribute("alt", "Flutterer Logo");
-    icon.setAttribute("src", "img/floot-icon.png");
-    logo.appendChild(icon);
+  let icon = document.createElement("img");
+  icon.classList.add("owl-icon");
+  // Set alt text for vision impaired
+  icon.setAttribute("alt", "Flutterer Logo");
+  icon.setAttribute("src", "img/floot-icon.png");
+  logo.appendChild(icon);
 
-    let text = document.createElement("span");
-    text.appendChild(document.createTextNode("flutterer"));
-    logo.appendChild(text);
+  let text = document.createElement("span");
+  text.appendChild(document.createTextNode("flutterer"));
+  logo.appendChild(text);
 
-    return logo;
+  return logo;
 }
 
 /**
@@ -81,30 +81,29 @@ function FluttererLogo() {
  *   </div>
  */
 function AccountSelector(users, selectedUser, actions) {
-    let accountList = document.createElement("div");
-    accountList.classList.add("account-list");
+  let accountList = document.createElement("div");
+  accountList.classList.add("account-list");
 
-    let hintText = document.createElement("p");
-    hintText.classList.add("hint");
-    hintText.appendChild(document.createTextNode("Log in as:"));
-    accountList.appendChild(hintText);
+  let hintText = document.createElement("p");
+  hintText.classList.add("hint");
+  hintText.appendChild(document.createTextNode("Log in as:"));
+  accountList.appendChild(hintText);
 
-    for (let username of users) {
-        // Create button and add it to the list
-        let button = document.createElement("button");
-        button.appendChild(document.createTextNode(username));
-        button.classList.add("account");
-        if (selectedUser === username) {
-            button.classList.add("account-clicked");
-        }
-        accountList.appendChild(button);
-
-        function buttonClicked() {
-            // TODO: Milestone 4: Call one of your functions in `actions` to
-            // change the selected user.
-        }
-        button.addEventListener("click", buttonClicked);
+  for (let username of users) {
+    // Create button and add it to the list
+    let button = document.createElement("button");
+    button.appendChild(document.createTextNode(username));
+    button.classList.add("account");
+    if (selectedUser === username) {
+      button.classList.add("account-clicked");
     }
+    accountList.appendChild(button);
 
-    return accountList;
+    function buttonClicked() {
+      actions.changeSelectedUser(username);
+    }
+    button.addEventListener("click", buttonClicked);
+  }
+
+  return accountList;
 }

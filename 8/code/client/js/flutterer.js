@@ -27,10 +27,18 @@ const USERS = [
  */
 function Flutterer() {
   let floots = [];
+  let actions = {
+    changeSelectedUser: (username) => {
+      while (document.body.lastChild != null) {
+        document.body.removeChild(document.body.lastChild);
+      }
+      document.body.appendChild(MainComponent(username, floots, actions));
+    },
+  };
   AsyncRequest("/api/floots")
     .setSuccessHandler((res) => {
       floots = JSON.parse(res.getPayload());
-      document.body.appendChild(MainComponent(USERS[0], floots, {}));
+      document.body.appendChild(MainComponent(USERS[0], floots, actions));
     })
     .send();
 }
