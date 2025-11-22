@@ -26,7 +26,13 @@ const USERS = [
  * Flutterer's entry point
  */
 function Flutterer() {
-  document.body.appendChild(MainComponent(USERS[0], [], {}));
+  let floots = [];
+  AsyncRequest("/api/floots")
+    .setSuccessHandler((res) => {
+      floots = JSON.parse(res.getPayload());
+      document.body.appendChild(MainComponent(USERS[0], floots, {}));
+    })
+    .send();
 }
 
 /**
