@@ -239,9 +239,20 @@ def like_floot(floot_id, request_body):
     HTTPError with status 404, and if "username" is missing from request_body,
     return an HTTPError with status 401.
     """
-    # TODO: if you're trying to do this extension, delete the following line,
-    # and replace it with your own implementation
-    return HTTPError(501, "api.like_floot not implemented yet")
+    if not db.has_floot(floot_id):
+        return HTTPError(404, f"No floot with id {floot_id} in database")
+
+    if "username" not in request_body:
+        return HTTPError(400, "Missing keys in payload")
+
+    floot = db.get_floot_by_id(floot_id)
+    liked_by = floot.get_liked_by()
+
+    if request_body["username"] in liked_by:
+        return
+
+    floot.set_liked(request_body["username"], True)
+    return "OK"
 
 
 # POST /api/floots/{floot_id}/unlike
@@ -261,9 +272,20 @@ def unlike_floot(floot_id, request_body):
     return an HTTPError with status 404, and if "username" is missing from
     request_body, return an HTTPError with status 401.
     """
-    # TODO: if you're trying to do this extension, delete the following line,
-    # and replace it with your own implementation
-    return HTTPError(501, "api.unlike_floot not implemented yet")
+    if not db.has_floot(floot_id):
+        return HTTPError(404, f"No floot with id {floot_id} in database")
+
+    if "username" not in request_body:
+        return HTTPError(400, "Missing keys in payload")
+
+    floot = db.get_floot_by_id(floot_id)
+    liked_by = floot.get_liked_by()
+
+    if request_body["username"] not in liked_by:
+        return
+
+    floot.set_liked(request_body["username"], False)
+    return "OK"
 
 
 # This specifies which functions should be called given a particular incoming
