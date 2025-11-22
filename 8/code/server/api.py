@@ -116,8 +116,16 @@ def delete_floot(floot_id, request_body):
     * If everything worked fine and the floot was successfully deleted, this
       function should return "OK".
     """
-    # TODO: delete the following line, and replace it with your own implementation
-    return HTTPError(501, "api.delete_floot not implemented yet")
+    if not db.has_floot(floot_id):
+        return HTTPError(404, "Provided floot ID could not be found")
+    elif "username" not in request_body:
+        return HTTPError(400, "Missing keys in payload")
+    elif request_body["username"] != db.get_floot_by_id(floot_id).get_username():
+        return HTTPError(
+            401, "Provided username does not match with the one who created the floot"
+        )
+    else:
+        return '"OK"'
 
 
 # GET /api/floot/{floot_id}/comments
