@@ -67,6 +67,9 @@ function Flutterer() {
         })
         .send();
     },
+    closeModal: () => {
+      renderMC(selectedUser, floots, actions);
+    },
   };
 
   updateFlootsIntoMC(selectedUser, actions);

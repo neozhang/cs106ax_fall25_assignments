@@ -36,56 +36,61 @@
  *   </div>
  */
 function FlootModal(floot, selectedUser, actions) {
-    // Show the clicked floot at the top of the modal (so it's clear what the
-    // comments are responding to)
-    let selectedFlootNode = Floot(floot, selectedUser, /* showDelete = */ false,
-        actions);
+  // Show the clicked floot at the top of the modal (so it's clear what the
+  // comments are responding to)
+  let selectedFlootNode = Floot(
+    floot,
+    selectedUser,
+    /* showDelete = */ false,
+    actions,
+  );
 
-    let commentsLabel = document.createElement("span");
-    commentsLabel.classList.add("comments-label");
-    commentsLabel.appendChild(document.createTextNode("Comments:"));
+  let commentsLabel = document.createElement("span");
+  commentsLabel.classList.add("comments-label");
+  commentsLabel.appendChild(document.createTextNode("Comments:"));
 
-    let commentsContainer = document.createElement("div");
-    commentsContainer.classList.add("comments-container");
-    commentsContainer.appendChild(CommentList(floot, selectedUser, actions));
-    commentsContainer.appendChild(NewCommentEntry(floot, actions));
+  let commentsContainer = document.createElement("div");
+  commentsContainer.classList.add("comments-container");
+  commentsContainer.appendChild(CommentList(floot, selectedUser, actions));
+  commentsContainer.appendChild(NewCommentEntry(floot, actions));
 
-    // Put these elements inside a scrollable region (useful if there are too
-    // many comments to fit on the screen)
-    let scrollable = document.createElement("div");
-    scrollable.classList.add("scrollable");
-    scrollable.appendChild(selectedFlootNode);
-    scrollable.appendChild(commentsLabel);
-    scrollable.appendChild(commentsContainer);
+  // Put these elements inside a scrollable region (useful if there are too
+  // many comments to fit on the screen)
+  let scrollable = document.createElement("div");
+  scrollable.classList.add("scrollable");
+  scrollable.appendChild(selectedFlootNode);
+  scrollable.appendChild(commentsLabel);
+  scrollable.appendChild(commentsContainer);
 
-    // Create close button
-    let closeBtnContainer = document.createElement("div");
-    let closeBtn = MaterialIcon("close");
-    closeBtn.classList.add("pointer");
-    closeBtn.classList.add("modal-close");
-    closeBtnContainer.appendChild(closeBtn);
-    // TODO: Milestone 7: Call one of your functions in `actions` to close the
-    // modal when closeBtn is clicked.
+  // Create close button
+  let closeBtnContainer = document.createElement("div");
+  let closeBtn = MaterialIcon("close");
+  closeBtn.classList.add("pointer");
+  closeBtn.classList.add("modal-close");
+  closeBtnContainer.appendChild(closeBtn);
+  closeBtn.addEventListener("click", () => {
+    actions.closeModal();
+  });
 
-    // Put content and close button inside modal
-    let modalContent = document.createElement("div");
-    modalContent.classList.add("modal-content");
-    modalContent.appendChild(closeBtnContainer);
-    modalContent.appendChild(scrollable);
+  // Put content and close button inside modal
+  let modalContent = document.createElement("div");
+  modalContent.classList.add("modal-content");
+  modalContent.appendChild(closeBtnContainer);
+  modalContent.appendChild(scrollable);
 
-    // Put the modal inside a container that spans the full screen. (This way,
-    // if you click outside the modal border, the modal will close.)
-    let modal = document.createElement("div");
-    modal.classList.add("modal");
-    modal.appendChild(modalContent);
-    // Close modal on click outside modal
-    modal.addEventListener("click", function (e) {
-        // Only handle clicks on the modal background itself. (Otherwise, the
-        // modal will close if you click *anything* inside it.)
-        if (e.target === modal) {
-            // TODO: Milestone 7: Close the modal.
-        }
-    });
+  // Put the modal inside a container that spans the full screen. (This way,
+  // if you click outside the modal border, the modal will close.)
+  let modal = document.createElement("div");
+  modal.classList.add("modal");
+  modal.appendChild(modalContent);
+  // Close modal on click outside modal
+  modal.addEventListener("click", function (e) {
+    // Only handle clicks on the modal background itself. (Otherwise, the
+    // modal will close if you click *anything* inside it.)
+    if (e.target === modal) {
+      actions.closeModal();
+    }
+  });
 
-    return modal;
+  return modal;
 }
