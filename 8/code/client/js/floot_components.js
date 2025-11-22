@@ -28,22 +28,21 @@
  * You don't need to change anything here.
  */
 function NewsFeed(selectedUser, floots, actions) {
-    let newsfeed = document.createElement("div");
-    newsfeed.classList.add("newsfeed");
+  let newsfeed = document.createElement("div");
+  newsfeed.classList.add("newsfeed");
 
-    // Add text box for creating new floots. Pass triggerDataRefresh as the
-    // second argument to NewFlootEntry, so that it can be called when the
-    // "Floot" button is pressed (in order to refresh the floot list and
-    // display the newly-posted floot).
-    newsfeed.appendChild(NewFlootEntry(selectedUser, actions));
+  // Add text box for creating new floots. Pass triggerDataRefresh as the
+  // second argument to NewFlootEntry, so that it can be called when the
+  // "Floot" button is pressed (in order to refresh the floot list and
+  // display the newly-posted floot).
+  newsfeed.appendChild(NewFlootEntry(selectedUser, actions));
 
-    // Show list of floots on the page. When a floot is deleted or liked,
-    // triggerDataRefresh will be called.
-    newsfeed.appendChild(FlootList(floots, selectedUser, actions));
+  // Show list of floots on the page. When a floot is deleted or liked,
+  // triggerDataRefresh will be called.
+  newsfeed.appendChild(FlootList(floots, selectedUser, actions));
 
-    return newsfeed;
+  return newsfeed;
 }
-
 
 /**
  * Component: NewFlootEntry
@@ -65,29 +64,28 @@ function NewsFeed(selectedUser, floots, actions) {
  *   </div>
  */
 function NewFlootEntry(selectedUser, actions) {
-    let container = document.createElement("div");
-    container.classList.add("new-floot-entry");
+  let container = document.createElement("div");
+  container.classList.add("new-floot-entry");
 
-    let profilePic = ProfilePicture(selectedUser, "img/" + selectedUser + ".jpg");
-    container.appendChild(profilePic);
+  let profilePic = ProfilePicture(selectedUser, "img/" + selectedUser + ".jpg");
+  container.appendChild(profilePic);
 
-    let textbox = document.createElement("textarea");
-    textbox.setAttribute("placeholder", "What's fluttering?");
-    container.appendChild(textbox);
+  let textbox = document.createElement("textarea");
+  textbox.setAttribute("placeholder", "What's fluttering?");
+  container.appendChild(textbox);
 
-    let flootButton = document.createElement("button");
-    flootButton.classList.add("button");
-    flootButton.classList.add("floot-button");
-    flootButton.appendChild(document.createTextNode("Floot"));
-    flootButton.addEventListener("click", postFloot);
-    container.appendChild(flootButton);
+  let flootButton = document.createElement("button");
+  flootButton.classList.add("button");
+  flootButton.classList.add("floot-button");
+  flootButton.appendChild(document.createTextNode("Floot"));
+  flootButton.addEventListener("click", postFloot);
+  container.appendChild(flootButton);
 
-    function postFloot() {
-        // TODO: Milestone 5: Call one of your functions in `actions` to post
-        // this floot.
-    }
+  function postFloot() {
+    actions.createFloot(textbox.value);
+  }
 
-    return container;
+  return container;
 }
 
 /**
@@ -110,15 +108,19 @@ function NewFlootEntry(selectedUser, actions) {
  *   </div>
  */
 function FlootList(floots, selectedUser, actions) {
-    let container = document.createElement("div");
-    container.classList.add("floot-list");
-    for (let floot of floots) {
-        let comp = Floot(floot, selectedUser,
-            /* showDelete = */ floot.username === selectedUser, actions);
+  let container = document.createElement("div");
+  container.classList.add("floot-list");
+  for (let floot of floots) {
+    let comp = Floot(
+      floot,
+      selectedUser,
+      /* showDelete = */ floot.username === selectedUser,
+      actions,
+    );
 
-        container.appendChild(comp);
-    }
-    return container;
+    container.appendChild(comp);
+  }
+  return container;
 }
 
 /**
@@ -156,50 +158,52 @@ function FlootList(floots, selectedUser, actions) {
  *   </div>
  */
 function Floot(flootInfo, selectedUser, showDelete, actions) {
-    let card = document.createElement("div");
-    card.classList.add("card");
-    card.classList.add("floot-card");
+  let card = document.createElement("div");
+  card.classList.add("card");
+  card.classList.add("floot-card");
 
-    if (showDelete) {
-        card.appendChild(DeleteButton(deleteFloot));
-    }
-    card.appendChild(ProfilePicture(flootInfo.username, "img/" + flootInfo.username + ".jpg"));
-    card.appendChild(FlootContent(flootInfo.username, flootInfo.message));
-    card.appendChild(LikeCommentCount(flootInfo, selectedUser, toggleLike));
-    card.addEventListener("click", handleCardClick);
+  if (showDelete) {
+    card.appendChild(DeleteButton(deleteFloot));
+  }
+  card.appendChild(
+    ProfilePicture(flootInfo.username, "img/" + flootInfo.username + ".jpg"),
+  );
+  card.appendChild(FlootContent(flootInfo.username, flootInfo.message));
+  card.appendChild(LikeCommentCount(flootInfo, selectedUser, toggleLike));
+  card.addEventListener("click", handleCardClick);
 
-    /**
-     * Handle clicks on the Floot card. (Open the modal to display this floot's
-     * comments.)
-     */
-    function handleCardClick() {
-        // TODO: Milestone 7: Call one of your functions in `actions` to open a
-        // modal showing this floot's comments.
-    }
+  /**
+   * Handle clicks on the Floot card. (Open the modal to display this floot's
+   * comments.)
+   */
+  function handleCardClick() {
+    // TODO: Milestone 7: Call one of your functions in `actions` to open a
+    // modal showing this floot's comments.
+  }
 
-    /**
-     * Handle clicks on the delete button.
-     */
-    function deleteFloot() {
-        // TODO: Milestone 6: Call one of your functions in `actions` to delete
-        // this floot.
-    }
+  /**
+   * Handle clicks on the delete button.
+   */
+  function deleteFloot() {
+    // TODO: Milestone 6: Call one of your functions in `actions` to delete
+    // this floot.
+  }
 
-    /**
-     * Handles clicks on the like button. If the floot is already liked,
-     * un-like it; if it is not liked, like it.
-     */
-    function toggleLike(e) {
-        // Stop modal from opening. (If you don't have this, the click event
-        // will also be given to the card's click handler, so handleCardClick()
-        // will be called and the modal will be opened.)
-        e.stopPropagation();
+  /**
+   * Handles clicks on the like button. If the floot is already liked,
+   * un-like it; if it is not liked, like it.
+   */
+  function toggleLike(e) {
+    // Stop modal from opening. (If you don't have this, the click event
+    // will also be given to the card's click handler, so handleCardClick()
+    // will be called and the modal will be opened.)
+    e.stopPropagation();
 
-        // TODO: If you are implementing the "like button" extension, call one
-        // of your functions in `actions` to like or un-like this floot.
-    }
+    // TODO: If you are implementing the "like button" extension, call one
+    // of your functions in `actions` to like or un-like this floot.
+  }
 
-    return card;
+  return card;
 }
 
 /**
@@ -229,19 +233,19 @@ function Floot(flootInfo, selectedUser, showDelete, actions) {
  *   </div>
  */
 function FlootContent(name, message) {
-    let container = document.createElement("div");
+  let container = document.createElement("div");
 
-    let userContainer = document.createElement("div");
-    userContainer.appendChild(document.createTextNode(name));
-    userContainer.classList.add("user");
+  let userContainer = document.createElement("div");
+  userContainer.appendChild(document.createTextNode(name));
+  userContainer.classList.add("user");
 
-    let messageContainer = document.createElement("div");
-    messageContainer.appendChild(document.createTextNode(message));
+  let messageContainer = document.createElement("div");
+  messageContainer.appendChild(document.createTextNode(message));
 
-    container.appendChild(userContainer);
-    container.appendChild(messageContainer);
+  container.appendChild(userContainer);
+  container.appendChild(messageContainer);
 
-    return container;
+  return container;
 }
 
 /**
@@ -264,18 +268,18 @@ function FlootContent(name, message) {
  *   </div>
  */
 function LikeCommentCount(flootInfo, selectedUser, onLike) {
-    let container = document.createElement("div");
-    container.classList.add("comment-like-count");
+  let container = document.createElement("div");
+  container.classList.add("comment-like-count");
 
-    // TODO: if you are implementing the like button extension, append a
-    // LikeCount component here. You should also add a click listener to the
-    // LikeCount node, calling onLike() when the element is clicked.
+  // TODO: if you are implementing the like button extension, append a
+  // LikeCount component here. You should also add a click listener to the
+  // LikeCount node, calling onLike() when the element is clicked.
 
-    // We haven't learned this in class, but you can do
-    // Object.keys(someAggregate) to get an array of keys in that aggregate,
-    // and then we can take the array length.
-    let numComments = Object.keys(flootInfo.comments).length;
-    container.appendChild(CommentCount(numComments));
+  // We haven't learned this in class, but you can do
+  // Object.keys(someAggregate) to get an array of keys in that aggregate,
+  // and then we can take the array length.
+  let numComments = Object.keys(flootInfo.comments).length;
+  container.appendChild(CommentCount(numComments));
 
-    return container;
+  return container;
 }

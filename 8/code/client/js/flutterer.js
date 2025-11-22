@@ -27,20 +27,47 @@ const USERS = [
  */
 function Flutterer() {
   let floots = [];
+  let selectedUser = USERS[0];
   let actions = {
     changeSelectedUser: (username) => {
-      while (document.body.lastChild != null) {
-        document.body.removeChild(document.body.lastChild);
-      }
-      document.body.appendChild(MainComponent(username, floots, actions));
+      selectedUser = username;
+      renderMC(selectedUser, floots, actions);
+    },
+    createFloot: (message) => {
+      let payload = JSON.stringify({
+        message: message,
+        username: selectedUser,
+      });
+      console.log(payload);
+      AsyncRequest("api/floots")
+        .setMethod("POST")
+        .setPayload(payload)
+        .setSuccessHandler((_res) => {
+          updateFlootsIntoMC(selectedUser, actions);
+        })
+        .send();
     },
   };
-  AsyncRequest("/api/floots")
-    .setSuccessHandler((res) => {
-      floots = JSON.parse(res.getPayload());
-      document.body.appendChild(MainComponent(USERS[0], floots, actions));
-    })
-    .send();
+
+  updateFlootsIntoMC(selectedUser, actions);
+
+  function updateFlootsIntoMC(username, actions) {
+    AsyncRequest("/api/floots")
+      .setSuccessHandler((res) => {
+        const newFloots = JSON.parse(res.getPayload());
+        if (JSON.stringify(floots) === JSON.stringify(newFloots)) return;
+        floots = newFloots;
+        renderMC(username, floots, actions);
+      })
+      .send();
+  }
+
+  function renderMC(username, floots, actions) {
+    while (document.body.lastChild != null) {
+      document.body.removeChild(document.body.lastChild);
+    }
+    document.body.appendChild(MainComponent(username, floots, actions));
+  }
 }
 
 /**
