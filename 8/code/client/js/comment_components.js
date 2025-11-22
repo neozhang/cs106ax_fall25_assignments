@@ -26,16 +26,24 @@
  *   </div>
  */
 function CommentList(floot, loggedInUsername, actions) {
-    let container = document.createElement("div");
-    container.classList.add("comment-list");
+  let container = document.createElement("div");
+  container.classList.add("comment-list");
 
-    for (let commentID of Object.keys(floot.comments)) {
-        let comment = floot.comments[commentID];
-        container.appendChild(Comment(comment.id, comment.username, comment.message,
-            /* showDelete = */ loggedInUsername === comment.username, floot.id, actions));
-    }
+  for (let commentID of Object.keys(floot.comments)) {
+    let comment = floot.comments[commentID];
+    container.appendChild(
+      Comment(
+        comment.id,
+        comment.username,
+        comment.message,
+        /* showDelete = */ loggedInUsername === comment.username,
+        floot.id,
+        actions,
+      ),
+    );
+  }
 
-    return container;
+  return container;
 }
 
 /**
@@ -63,21 +71,20 @@ function CommentList(floot, loggedInUsername, actions) {
  *   </div>
  */
 function Comment(id, name, message, showDelete, flootId, actions) {
-    let container = document.createElement("div");
-    container.classList.add("comment");
+  let container = document.createElement("div");
+  container.classList.add("comment");
 
-    if (showDelete) {
-        container.appendChild(DeleteButton(deleteComment));
-    }
-    container.appendChild(ProfilePicture(name, "img/" + name + ".jpg"));
-    container.appendChild(CommentContents(name, message));
+  if (showDelete) {
+    container.appendChild(DeleteButton(deleteComment));
+  }
+  container.appendChild(ProfilePicture(name, "img/" + name + ".jpg"));
+  container.appendChild(CommentContents(name, message));
 
-    function deleteComment() {
-        // TODO: Milestone 8: Use one of your functions in `actions` to delete
-        // this comment.
-    }
+  function deleteComment() {
+    actions.deleteComment(id, flootId, name);
+  }
 
-    return container;
+  return container;
 }
 
 /**
@@ -101,19 +108,19 @@ function Comment(id, name, message, showDelete, flootId, actions) {
  *   </div>
  */
 function CommentContents(name, message) {
-    let container = document.createElement("div");
+  let container = document.createElement("div");
 
-    let posterContainer = document.createElement("div");
-    posterContainer.classList.add("user");
-    posterContainer.appendChild(document.createTextNode(name));
-    container.appendChild(posterContainer);
+  let posterContainer = document.createElement("div");
+  posterContainer.classList.add("user");
+  posterContainer.appendChild(document.createTextNode(name));
+  container.appendChild(posterContainer);
 
-    let commentContainer = document.createElement("div");
-    commentContainer.classList.add("comment-content");
-    commentContainer.appendChild(document.createTextNode(message));
-    container.appendChild(commentContainer);
+  let commentContainer = document.createElement("div");
+  commentContainer.classList.add("comment-content");
+  commentContainer.appendChild(document.createTextNode(message));
+  container.appendChild(commentContainer);
 
-    return container;
+  return container;
 }
 
 /**
@@ -134,25 +141,23 @@ function CommentContents(name, message) {
  *   </div>
  */
 function NewCommentEntry(floot, actions) {
-    let container = document.createElement("div");
+  let container = document.createElement("div");
 
-    let textbox = document.createElement("textarea");
-    textbox.classList.add("new-comment-text");
-    textbox.setAttribute("placeholder", "Add Comment");
-    container.appendChild(textbox);
+  let textbox = document.createElement("textarea");
+  textbox.classList.add("new-comment-text");
+  textbox.setAttribute("placeholder", "Add Comment");
+  container.appendChild(textbox);
 
-    let button = document.createElement("button");
-    button.appendChild(document.createTextNode("Add Comment"));
-    button.classList.add("button");
-    button.classList.add("new-comment-btn");
-    button.addEventListener("click", submitComment);
-    container.appendChild(button);
+  let button = document.createElement("button");
+  button.appendChild(document.createTextNode("Add Comment"));
+  button.classList.add("button");
+  button.classList.add("new-comment-btn");
+  button.addEventListener("click", submitComment);
+  container.appendChild(button);
 
+  function submitComment() {
+    actions.createComment(floot.id, textbox.value);
+  }
 
-    function submitComment() {
-        // TODO: Milestone 8: Use one of your functions in `actions` to post
-        // this new comment.
-    }
-
-    return container;
+  return container;
 }

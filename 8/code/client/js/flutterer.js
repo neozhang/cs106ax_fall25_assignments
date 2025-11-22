@@ -28,13 +28,13 @@ const USERS = [
 function Flutterer() {
   let floots = [];
   let selectedUser = USERS[0];
-  let actions = {
+  const actions = {
     changeSelectedUser: (username) => {
       selectedUser = username;
       renderMC(selectedUser, floots, actions);
     },
     createFloot: (message) => {
-      let payload = JSON.stringify({
+      const payload = JSON.stringify({
         message: message,
         username: selectedUser,
       });
@@ -47,10 +47,10 @@ function Flutterer() {
         .send();
     },
     deleteFloot: (floot_id) => {
-      let payload = JSON.stringify({
+      const payload = JSON.stringify({
         username: selectedUser,
       });
-      let url = "api/floots/" + floot_id + "/delete";
+      const url = "api/floots/" + floot_id + "/delete";
       AsyncRequest(url)
         .setMethod("POST")
         .setPayload(payload)
@@ -69,6 +69,44 @@ function Flutterer() {
     },
     closeModal: () => {
       renderMC(selectedUser, floots, actions);
+    },
+    createComment: (floot_id, message) => {
+      const payload = JSON.stringify({
+        username: selectedUser,
+        message: message,
+      });
+      const url = "api/floots/" + floot_id + "/comments";
+      AsyncRequest(url)
+        .setMethod("POST")
+        .setPayload(payload)
+        .setSuccessHandler((_res) => {
+          AsyncRequest("api/floots/" + floot_id)
+            .setSuccessHandler((res) => {
+              const selectedFloot = JSON.parse(res.getPayload());
+              renderMC(selectedUser, floots, actions, selectedFloot);
+            })
+            .send();
+        })
+        .send();
+    },
+    deleteComment: (comment_id, floot_id, name) => {
+      const url =
+        "api/floots/" + floot_id + "/comments/" + comment_id + "/delete";
+      const payload = JSON.stringify({
+        username: name,
+      });
+      AsyncRequest(url)
+        .setMethod("POST")
+        .setPayload(payload)
+        .setSuccessHandler((_res) => {
+          AsyncRequest("api/floots/" + floot_id)
+            .setSuccessHandler((res) => {
+              const selectedFloot = JSON.parse(res.getPayload());
+              renderMC(selectedUser, floots, actions, selectedFloot);
+            })
+            .send();
+        })
+        .send();
     },
   };
 
