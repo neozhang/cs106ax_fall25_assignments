@@ -38,8 +38,20 @@ function Flutterer() {
         message: message,
         username: selectedUser,
       });
-      console.log(payload);
       AsyncRequest("api/floots")
+        .setMethod("POST")
+        .setPayload(payload)
+        .setSuccessHandler((_res) => {
+          updateFlootsIntoMC(selectedUser, actions);
+        })
+        .send();
+    },
+    deleteFloot: (floot_id) => {
+      let payload = JSON.stringify({
+        username: selectedUser,
+      });
+      let url = "api/floots/" + floot_id + "/delete";
+      AsyncRequest(url)
         .setMethod("POST")
         .setPayload(payload)
         .setSuccessHandler((_res) => {

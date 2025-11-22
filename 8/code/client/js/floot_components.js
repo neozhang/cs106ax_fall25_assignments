@@ -185,8 +185,7 @@ function Floot(flootInfo, selectedUser, showDelete, actions) {
    * Handle clicks on the delete button.
    */
   function deleteFloot() {
-    // TODO: Milestone 6: Call one of your functions in `actions` to delete
-    // this floot.
+    actions.deleteFloot(flootInfo.id);
   }
 
   /**
